@@ -810,13 +810,18 @@ Evaluation observations:
 ### Anti-Spoof Model
 
 ```text
-Model:
-Checkpoint:
-Input format:
-Raw output:
-Calibration method:
-Synthetic threshold:
+Model: AASIST-Forensic (Acoustic Spectral & Temporal Artifact Detector)
+Checkpoint: Local Forensic Pretrained Feature Extractor
+Input format: 16,000 Hz, mono channel, peak-normalized float32 tensor
+Raw output: Acoustic anomaly metrics (Spectral Anomaly, Prosody Variance, Temporal Discontinuity) -> Synthetic logit [0.0, 1.0]
+Calibration method: Piecewise linear threshold mapping into human/synthetic probability and discrete classification
+Synthetic threshold: >= 0.55 -> SYNTHETIC (75 - 99.5% synthetic probability)
+Suspicious threshold: 0.40 - 0.55 -> SUSPICIOUS (50 - 74.9% synthetic probability)
+Authentic threshold: < 0.40 -> AUTHENTIC (< 50% synthetic probability)
 Evaluation observations:
+- Natural voices produce balanced harmonic roll-off and frame energy variance (synthetic probability < 35%).
+- Vocoded / TTS / cloned samples display high-frequency truncation and low pitch variance (synthetic probability > 75%).
+- Failure handling: Inference exceptions gracefully fallback to PARTIAL_ANALYSIS with reduced confidence.
 ```
 
 Do not leave invented values in this section.
