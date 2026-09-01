@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-01
+**Current PR:** PR-02
 **Current phase:** Phase 1 — Audio Foundation
-**Overall status:** PR-00 complete. Monorepo scaffolding, FastAPI backend with SQLite config, ML package structure, and Next.js frontend with live /health check indicator fully verified.
+**Overall status:** PR-00 and PR-01 complete. Browser audio capture, recording controls (start, stop, VU level meter, timer), drag/drop and picker file upload, strict client-side validation via Web Audio API, and audio playback review interface verified.
 
 ---
 
@@ -29,7 +29,7 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, shadcn/ui)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, shadcn/ui, Web Audio API validator & recorder)
 ├── backend/      # FastAPI / Python (async, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (isolated package)
 ├── docs/         # Architecture and technical documentation
@@ -49,7 +49,7 @@ Keep one short entry per completed PR.
 
 ```text
 PR-00 — Complete — 2026-09-01: Monorepo scaffolding, FastAPI /health endpoint, SQLite setup, Next.js frontend health dashboard.
-PR-01 — Not started
+PR-01 — Complete — 2026-09-01: Client-side audio capture, upload, playback, and Web Audio API validation (duration, energy, silent/empty/corrupt checks).
 PR-02 — Not started
 PR-03 — Not started
 ...
