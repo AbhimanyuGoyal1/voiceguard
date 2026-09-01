@@ -7,16 +7,16 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 2 — Resilience & Threat Simulation
-**Current PR:** PR-10
-**Current Branch:** `pr-10-attack-simulator`
+**Current PR:** PR-11
+**Current Branch:** `pr-11-threat-timeline`
 
 ---
 
 ## Current Task
 
-### PR-10 — Attack Simulator
+### PR-11 — Threat Timeline
 
-**Tier:** T1 — Core Voice Analysis / Threat Simulation
+**Tier:** T2 — Interactive Visuals & Forensic Timeline
 **Test:** `[TEST: skip]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).

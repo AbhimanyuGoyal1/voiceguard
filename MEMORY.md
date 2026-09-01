@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-10
+**Current PR:** PR-11
 **Current phase:** Phase 2 — Resilience & Threat Simulation
-**Overall status:** PR-00 through PR-09 complete. Deterministic Scenario Engine and Demo Mode implemented in `/backend/services/scenario_engine.py` and connected seamlessly to the frontend without requiring page reloads. Four canonical scenarios verified: Genuine Voice (LOW), AI Voice Clone (CRITICAL), Replay Attack (HIGH), and Unknown Speaker (MODERATE).
+**Overall status:** PR-00 through PR-10 complete. Interactive Attack Simulator (`AttackSimulator`) integrated into the dashboard, driving the canonical scenario engine across all 4 attack vectors (Genuine Voice, AI Voice Clone, Replay Attack, Unknown Speaker) with full ML pipeline rendering.
 
 ---
 
@@ -29,7 +29,7 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Live/Demo Mode Switcher)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher)
 ├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
@@ -87,7 +87,8 @@ PR-06 — Complete — 2026-09-01: Authoritative deterministic Risk Engine, mult
 PR-07 — Complete — 2026-09-01: Live Threat Dashboard SOC interface, WebSocket pipeline streaming (/ws/analyze), reconnect-with-backoff, and live ML visual cards.
 PR-08 — Complete — 2026-09-01: Deterministic "WHY?" Explainability Panel, acoustic anomaly attribution, and evidence breakdown.
 PR-09 — Complete — 2026-09-01: Demo Mode & Scenario Engine, 4 canonical deterministic fixtures (Genuine, Clone, Replay, Unknown), and Live/Demo switching.
-PR-10 — Not started
+PR-10 — Complete — 2026-09-01: Interactive Attack Simulator launcher with threat vector selection and simulated pipeline progression.
+PR-11 — Not started
 ...
 PR-20 — Not started
 ```
