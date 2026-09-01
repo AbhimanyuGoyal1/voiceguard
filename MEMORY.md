@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-07
+**Current PR:** PR-08
 **Current phase:** Phase 1 — Core Voice Analysis
-**Overall status:** PR-00 through PR-06 complete. Deterministic Authoritative Risk Engine implemented in `/backend/services/risk_engine.py`, evaluated against LOW, MODERATE, HIGH, and CRITICAL threat tiers, targeted impersonation escalation multiplier, security challenge modulation, and partial analysis degradation.
+**Overall status:** PR-00 through PR-07 complete. Live Threat Dashboard (SOC interface) fully assembled and connected to real backend analysis (`POST /api/analyze`) and WebSocket streaming (`/ws/analyze`). Features live oscilloscope & STFT spectrogram visualizers, authoritative Risk Meter, Speaker Verification Card, Authenticity/Anti-Spoof Card, reconnect-with-backoff handling, and forensic timeline event stream.
 
 ---
 
@@ -29,8 +29,8 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer)
-├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard)
+├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
 ├── tasks/        # Agent task management
@@ -84,7 +84,8 @@ PR-03 — Complete — 2026-09-01: Backend audio ingestion + preprocessing (POST
 PR-04 — Complete — 2026-09-01: Pretrained ECAPA-TDNN speaker verification, 192-d embeddings, cosine similarity calibration, and enrollment caching.
 PR-05 — Complete — 2026-09-01: AASIST-Forensic anti-spoof/synthetic voice detection, synthetic probability calibration, and PARTIAL_ANALYSIS degradation handling.
 PR-06 — Complete — 2026-09-01: Authoritative deterministic Risk Engine, multi-signal scoring, impersonation boost, and challenge modulation.
-PR-07 — Not started
+PR-07 — Complete — 2026-09-01: Live Threat Dashboard SOC interface, WebSocket pipeline streaming (/ws/analyze), reconnect-with-backoff, and live ML visual cards.
+PR-08 — Not started
 ...
 PR-20 — Not started
 ```
