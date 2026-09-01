@@ -6,17 +6,17 @@
 ## Project Status
 
 **Project:** VoiceGuard
-**Stage:** Pre-build / Foundation
-**Current PR:** PR-00
-**Current Branch:** `pr-00-project-scaffolding`
+**Stage:** Phase 1 — Audio Foundation
+**Current PR:** PR-01
+**Current Branch:** `pr-01-audio-capture`
 
 ---
 
 ## Current Task
 
-### PR-00 — Project Scaffolding
+### PR-01 — Audio Capture & Upload
 
-**Tier:** T1 — Foundation
+**Tier:** T1 — Audio Foundation
 **Test:** `[TEST: skip]`
 
 Build the initial VoiceGuard monorepo and establish the development environment.
