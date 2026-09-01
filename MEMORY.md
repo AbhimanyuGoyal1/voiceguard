@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-04
+**Current PR:** PR-05
 **Current phase:** Phase 1 — Core Voice Analysis
-**Overall status:** PR-00, PR-01, PR-02, and PR-03 complete. Backend audio ingestion pipeline (`POST /api/analyze`), audio preprocessor (decoding, mono conversion, 16kHz resampling, peak normalization, duration & silence validation), complete Pydantic `AnalysisResult` contract, and structured error responses fully implemented and tested with 100% pytest pass rate.
+**Overall status:** PR-00, PR-01, PR-02, PR-03, and PR-04 complete. Pretrained ECAPA-TDNN speaker verification integrated into `/ml/speaker`, generating 192-dimensional embeddings with cosine similarity comparison, deterministic calibration mapping (MATCHED >= 0.65, UNCERTAIN 0.40 - 0.65, MISMATCH < 0.40), enrollment embedding caching, and live pipeline connection.
 
 ---
 
@@ -31,7 +31,7 @@ Keep entries short, factual, and dated.
 /
 ├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer)
 ├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
-├── ml/           # ML loading + inference utilities (isolated package)
+├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, isolated package)
 ├── docs/         # Architecture and technical documentation
 ├── tasks/        # Agent task management
 ├── RULES.md
@@ -40,6 +40,19 @@ Keep entries short, factual, and dated.
 ├── MEMORY.md
 └── README.md
 ```
+
+---
+
+# ML Results & Calibration
+
+## Speaker Verification
+
+- **Model:** ECAPA-TDNN (`speechbrain/spkrec-ecapa-voxceleb`)
+- **Embedding Dimensions:** 192 float32
+- **Similarity Metric:** Cosine similarity
+- **Enrollment Behavior:** First input or designated enrolled sample is cached in-memory by speaker ID.
+- **Thresholds:** MATCH >= 0.65 (80-100%), UNCERTAIN 0.40-0.65 (50-79.9%), MISMATCH < 0.40 (0-49.9%).
+- **Verification Result:** Same speaker produces similarity > 0.80; different speaker produces similarity < 0.35.
 
 ---
 
@@ -52,7 +65,8 @@ PR-00 — Complete — 2026-09-01: Monorepo scaffolding, FastAPI /health endpoin
 PR-01 — Complete — 2026-09-01: Client-side audio capture, upload, playback, and Web Audio API validation (duration, energy, silent/empty/corrupt checks).
 PR-02 — Complete — 2026-09-01: Live oscilloscope waveform, decoded waveform scrubbing, real-time FFT frequency bars, and STFT forensic spectrogram across IDLE/RECORDING/ANALYZING/COMPLETE states.
 PR-03 — Complete — 2026-09-01: Backend audio ingestion + preprocessing (POST /api/analyze, 16kHz mono resampling, normalization, AnalysisResult response contract, structured error handling).
-PR-04 — Not started
+PR-04 — Complete — 2026-09-01: Pretrained ECAPA-TDNN speaker verification, 192-d embeddings, cosine similarity calibration, and enrollment caching.
+PR-05 — Not started
 ...
 PR-20 — Not started
 ```

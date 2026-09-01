@@ -7,14 +7,14 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Core Voice Analysis
-**Current PR:** PR-04
-**Current Branch:** `pr-04-speaker-verification`
+**Current PR:** PR-05
+**Current Branch:** `pr-05-anti-spoof`
 
 ---
 
 ## Current Task
 
-### PR-04 — Speaker Verification
+### PR-05 — Anti-Spoof / Deepfake Detection
 
 **Tier:** T1 — Core Voice Analysis
 **Test:** `[TEST: required]`

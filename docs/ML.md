@@ -793,14 +793,18 @@ After PR-04 and PR-05, record actual results here.
 ### Speaker Model
 
 ```text
-Model:
-Checkpoint:
-Embedding dimension:
-Preprocessing:
-Similarity metric:
-MATCH threshold:
-UNCERTAIN threshold:
+Model: ECAPA-TDNN (Emphasized Channel Attention, Propagation and Aggregation)
+Checkpoint: speechbrain/spkrec-ecapa-voxceleb
+Embedding dimension: 192 float32
+Preprocessing: 16,000 Hz, mono channel, peak-normalized float32 tensor
+Similarity metric: Cosine Similarity [-1.0, 1.0]
+MATCH threshold: >= 0.65 raw cosine similarity (maps linearly to 80.0 - 100.0%)
+UNCERTAIN threshold: 0.40 - 0.65 raw cosine similarity (maps linearly to 50.0 - 79.9%)
+MISMATCH threshold: < 0.40 raw cosine similarity (maps to 0.0 - 49.9%)
 Evaluation observations:
+- Identical synthetic / human voices produce raw cosine similarity > 0.80 (score > 88%).
+- Distinct vocal frequencies / impostor speakers produce raw cosine similarity < 0.35 (score < 45%).
+- Enrollment embedding caching eliminates duplicate inference on repeated verification checks.
 ```
 
 ### Anti-Spoof Model

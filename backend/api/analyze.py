@@ -20,11 +20,12 @@ router = APIRouter(prefix="/api", tags=["Audio Analysis"])
 async def analyze_audio(
     file: UploadFile = File(..., description="Audio file binary stream (WAV, MP3, OGG, WebM, FLAC)"),
     session_id: Optional[str] = Form(None, description="Optional client session ID"),
+    enrolled_speaker_id: Optional[str] = Form("Primary User", description="Target enrolled identity for verification"),
 ):
     """
     Core audio analysis ingestion and preprocessing endpoint.
     Decodes raw audio, validates duration and signal energy, resamples to 16kHz mono,
-    and returns the structured AnalysisResult contract.
+    executes real ECAPA-TDNN speaker verification, and returns the structured AnalysisResult.
     """
     if not file:
         return JSONResponse(
@@ -39,7 +40,12 @@ async def analyze_audio(
     try:
         file_bytes = await file.read()
         processed_tensor, metadata = decode_and_validate_audio(file_bytes, filename=file.filename or "audio.wav")
-        result = build_analysis_pipeline_response(metadata=metadata, session_id=session_id)
+        result = build_analysis_pipeline_response(
+            metadata=metadata,
+            audio_tensor=processed_tensor,
+            session_id=session_id,
+            enrolled_speaker_id=enrolled_speaker_id or "Primary User",
+        )
         return result
 
     except AudioProcessingError as ape:
