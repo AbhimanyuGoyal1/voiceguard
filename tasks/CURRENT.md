@@ -7,14 +7,14 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Core Voice Analysis
-**Current PR:** PR-03
-**Current Branch:** `pr-03-audio-pipeline`
+**Current PR:** PR-04
+**Current Branch:** `pr-04-speaker-verification`
 
 ---
 
 ## Current Task
 
-### PR-03 — Backend Audio Ingestion + Preprocessing
+### PR-04 — Speaker Verification
 
 **Tier:** T1 — Core Voice Analysis
 **Test:** `[TEST: required]`
