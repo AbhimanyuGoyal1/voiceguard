@@ -7,45 +7,49 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Core Voice Analysis
-**Current PR:** PR-07
-**Current Branch:** `pr-07-threat-dashboard`
+**Current PR:** PR-08
+**Current Branch:** `pr-08-why-panel`
 
 ---
 
 ## Current Task
 
-### PR-07 — Live Threat Dashboard
+### PR-08 — Explainable Detection — "WHY?"
 
 **Tier:** T1 — Core Voice Analysis
 **Test:** `[TEST: skip]`
 
-Implement real-time audio visualization using Web Audio API and Canvas.
+Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
 
 ### Scope
 
-* **Live Waveform:** Real-time oscilloscope / time-domain canvas responding smoothly to microphone amplitude.
-* **Captured Waveform:** Static waveform rendering from decoded `AudioBuffer` with interactive playhead/scrubbing.
-* **Spectrogram / Frequency Visualizer:** Real-time frequency bar/waterfall FFT visualizer during recording and offline spectrogram generation from `AudioBuffer`.
-* **State Support:** Clean state transitions across:
-  - `IDLE`
-  - `RECORDING`
-  - `ANALYZING`
-  - `COMPLETE`
-* Reusable modular visualization components designed for the upcoming main security operations dashboard.
+* **WebSocket Streaming (`/ws/analyze`):**
+  - Real-time analysis progression stream: `RECORDING` → `ANALYZING` → `PARTIAL_RESULT` → `FINAL_RESULT`.
+  - Client-side reconnect-with-backoff.
+  - Visible `RECONNECTING` and degraded indicators without displaying stale data.
+* **Main SOC Dashboard Panels:**
+  - **Global Header:** Online state, Live/Demo mode badge, WebSocket connection status.
+  - **Risk Score Meter:** Gauge/radial progress, threat level badge (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`), confidence score.
+  - **Speaker Identity Card:** Enrolled identity, similarity percentage, match badge (`MATCHED`, `UNCERTAIN`, `MISMATCH`).
+  - **Authenticity Card:** Human % vs Synthetic %, classification (`AUTHENTIC`, `SUSPICIOUS`, `SYNTHETIC`).
+  - **Audio Visualizer:** Oscilloscope waveform, STFT spectrogram, dual-view toggles.
+  - **Pipeline State & Status Card:** Active state indicators, live processing logs.
+  - **Threat Timeline Preview:** Chronological analysis events.
+* Connect live microphone recording and file upload to the backend API & WebSocket flow.
 
 ---
 
 ## Definition of Done
 
-PR-02 is complete when:
+PR-07 is complete when:
 
-* [ ] Live microphone input visibly drives the real-time waveform and frequency visualizer.
-* [ ] Completed recording or uploaded file produces a high-resolution waveform and spectrogram.
-* [ ] Visualizations support `IDLE`, `RECORDING`, `ANALYZING`, and `COMPLETE` states.
-* [ ] Visualizers are modular and reusable for the dashboard in PR-07.
+* [ ] Live microphone capture or upload runs real backend analysis and renders real inference results.
+* [ ] WebSocket streaming `/ws/analyze` streams live progress updates (`RECORDING` → `ANALYZING` → `FINAL_RESULT`).
+* [ ] Reconnect-with-backoff handles WebSocket dropouts with a visible `RECONNECTING` badge.
+* [ ] Dashboard UI satisfies `docs/UI_UX.md` cybersecurity SOC aesthetic.
 * [ ] `npm run build` succeeds without lint or type errors.
 * [ ] `MEMORY.md` is updated.
-* [ ] `CURRENT.md` is updated for PR-03.
+* [ ] `CURRENT.md` is updated for PR-08.
 * [ ] PR branch pushed and execution stops for review.
 
 ---
@@ -55,10 +59,14 @@ PR-02 is complete when:
 Primarily:
 
 ```text
-/frontend/src/components/visualization/live-waveform.tsx
-/frontend/src/components/visualization/spectrogram.tsx
-/frontend/src/components/visualization/audio-visualizer.tsx
-/frontend/src/components/audio/audio-capture.tsx
+/backend/api/websocket.py
+/backend/main.py
+/frontend/src/types/analysis.ts
+/frontend/src/hooks/use-analysis-socket.ts
+/frontend/src/components/dashboard/threat-dashboard.tsx
+/frontend/src/components/dashboard/risk-meter.tsx
+/frontend/src/components/dashboard/speaker-card.tsx
+/frontend/src/components/dashboard/authenticity-card.tsx
 /frontend/src/app/page.tsx
 /MEMORY.md
 /tasks/CURRENT.md
@@ -68,7 +76,7 @@ Primarily:
 
 ## Next PR
 
-After PR-02 is completed and reviewed:
+After PR-07 is completed and reviewed:
 
-**PR-03 — Backend Audio Ingestion + Preprocessing**
-Branch: `pr-03-audio-pipeline`
+**PR-08 — Explainable Detection — "WHY?"**
+Branch: `pr-08-why-panel`

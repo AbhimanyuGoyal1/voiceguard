@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.api.analyze import router as analyze_router
+from backend.api.websocket import ws_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -19,6 +20,7 @@ app.add_middleware(
 
 # Include API Routers
 app.include_router(analyze_router)
+app.include_router(ws_router)
 
 
 @app.get("/health", tags=["Health"])
