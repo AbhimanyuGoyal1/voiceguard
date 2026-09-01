@@ -33,3 +33,9 @@
 - **Decision:** Implement forensic spectral and temporal anomaly detection (`AASIST-Forensic`) evaluating neural vocoder high-frequency roll-off (>7kHz), frame energy variance/prosody irregularity, and temporal discontinuities.
 - **Rationale:** Detects synthetic voice characteristics (TTS, voice conversion, diffusion vocoders) locally and fast (<50ms). Calibrates into human/synthetic probability and classification (`AUTHENTIC`, `SUSPICIOUS`, `SYNTHETIC`). In case of model failure, emits explicit `PARTIAL_ANALYSIS` rather than crashing or faking signals.
 
+## ADR-005: Deterministic Authoritative Risk Engine
+-**Status:** Accepted (PR-06)
+-**Date:** 2026-09-01
+-**Context:** Security decisions require a deterministic, testable, explainable mathematical formulation independent of probabilistic LLMs.
+-**Decision:** The authoritative Risk Engine combines `SyntheticProbability * 0.50`, `AcousticAnomalies * 0.20`, and `SpeakerMismatch * 0.30`. If both speaker match and synthetic probability are >= 70%, an impersonation boost escalates risk into `CRITICAL`. Failed security challenges escalate risk by +35. Missing signals trigger explicit `PARTIAL_ANALYSIS` (confidence <= 0.6).
+-**Rationale:** Ensures absolute determinism, explainable evidence generation, and guarantees that synthetic speech matching an enrolled user triggers a high-severity alert.

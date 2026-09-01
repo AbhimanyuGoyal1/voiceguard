@@ -442,8 +442,31 @@ Risk Engine
 Risk Level
 ```
 
-Risk bands:
+### Deterministic Risk Engine Formula
 
+The authoritative risk score is computed as:
+
+```text
+RiskScore = (Authenticity * 0.50) + (AcousticAnomalies * 0.20) + (SpeakerMismatch * 0.30)
+```
+
+Where:
+- `Authenticity`: Synthetic probability (0–100%)
+- `AcousticAnomalies`: Average of spectral, prosody, and temporal artifact metrics (0–100%)
+- `SpeakerMismatch`: `(100.0 - SpeakerMatchScore)` (0–100%)
+
+#### Targeted Impersonation Escalation Multiplier:
+When `SyntheticProbability >= 70%` AND `SpeakerMatchScore >= 70%` (indicating a convincing voice clone intended to spoof the enrolled user), an impersonation escalation multiplier applies:
+```text
+Boost = 30.0 * (SyntheticProb / 100) * (SpeakerMatch / 100)
+RiskScore = max(80.0, RiskScore + Boost)
+```
+
+#### Active Security Challenge Modulation:
+- If challenge fails (`challenge_passed = False`), Risk score escalates: `max(75.0, RiskScore + 35.0)`
+- If challenge passes (`challenge_passed = True`), Risk score reduces: `max(0.0, RiskScore - 25.0 * (1.0 - SyntheticProb / 100))`
+
+#### Risk Bands:
 ```text
 0–25     LOW
 26–50    MODERATE
@@ -451,9 +474,7 @@ Risk bands:
 76–100   CRITICAL
 ```
 
-The exact formula must be documented and version-controlled.
-
-The UI must never independently calculate or modify the authoritative risk score.
+The formula is deterministic, reproducible, and evaluated independently of generative LLMs.
 
 ---
 
