@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-09
-**Current phase:** Phase 2 — Resilience & Threat Simulation (Cut-Line Checkpoint Passed)
-**Overall status:** PR-00 through PR-08 complete. Core real-time voice impersonation and deepfake detection system is fully built and operational. Deterministic "WHY?" Explainability Panel connects real computed ML signals (ECAPA-TDNN speaker match, AASIST anti-spoof synthetic probability, spectral roll-off anomalies, frame energy variance) directly to user-facing forensic attributions without LLM hallucination.
+**Current PR:** PR-10
+**Current phase:** Phase 2 — Resilience & Threat Simulation
+**Overall status:** PR-00 through PR-09 complete. Deterministic Scenario Engine and Demo Mode implemented in `/backend/services/scenario_engine.py` and connected seamlessly to the frontend without requiring page reloads. Four canonical scenarios verified: Genuine Voice (LOW), AI Voice Clone (CRITICAL), Replay Attack (HIGH), and Unknown Speaker (MODERATE).
 
 ---
 
@@ -29,8 +29,8 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel)
-├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Live/Demo Mode Switcher)
+├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
 ├── tasks/        # Agent task management
@@ -86,7 +86,8 @@ PR-05 — Complete — 2026-09-01: AASIST-Forensic anti-spoof/synthetic voice de
 PR-06 — Complete — 2026-09-01: Authoritative deterministic Risk Engine, multi-signal scoring, impersonation boost, and challenge modulation.
 PR-07 — Complete — 2026-09-01: Live Threat Dashboard SOC interface, WebSocket pipeline streaming (/ws/analyze), reconnect-with-backoff, and live ML visual cards.
 PR-08 — Complete — 2026-09-01: Deterministic "WHY?" Explainability Panel, acoustic anomaly attribution, and evidence breakdown.
-PR-09 — Not started
+PR-09 — Complete — 2026-09-01: Demo Mode & Scenario Engine, 4 canonical deterministic fixtures (Genuine, Clone, Replay, Unknown), and Live/Demo switching.
+PR-10 — Not started
 ...
 PR-20 — Not started
 ```

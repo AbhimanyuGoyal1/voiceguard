@@ -7,17 +7,17 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 2 — Resilience & Threat Simulation
-**Current PR:** PR-09
-**Current Branch:** `pr-09-reconnect-graceful-degradation`
+**Current PR:** PR-10
+**Current Branch:** `pr-10-attack-simulator`
 
 ---
 
 ## Current Task
 
-### PR-09 — Reconnect & Graceful Degradation
+### PR-10 — Attack Simulator
 
-**Tier:** T1 — Core Voice Analysis / Resilience
-**Test:** `[TEST: required]`
+**Tier:** T1 — Core Voice Analysis / Threat Simulation
+**Test:** `[TEST: skip]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
 
