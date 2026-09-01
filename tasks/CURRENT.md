@@ -7,76 +7,56 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Audio Foundation
-**Current PR:** PR-01
-**Current Branch:** `pr-01-audio-capture`
+**Current PR:** PR-02
+**Current Branch:** `pr-02-audio-visualization`
 
 ---
 
 ## Current Task
 
-### PR-01 — Audio Capture & Upload
+### PR-02 — Live Waveform + Spectrogram
 
 **Tier:** T1 — Audio Foundation
 **Test:** `[TEST: skip]`
 
-Build the initial VoiceGuard monorepo and establish the development environment.
+Implement client-side browser audio capture, recording controls, audio upload (file picker and drag/drop), and strict client-side audio validation.
 
 ### Scope
 
-* Create `/frontend`
-
-  * Next.js
-  * TypeScript
-  * Tailwind
-  * shadcn/ui
-* Create `/backend`
-
-  * FastAPI
-  * Python environment
-  * dependency management choice documented
-* Create `/ml`
-
-  * model-loading structure
-  * kept separate from FastAPI routing
-* Configure `.env.example` files.
-* Include optional placeholders for:
-
-  * `LLM_API_KEY`
-  * `TTS_API_KEY`
-  * `STT_API_KEY`
-* Ensure the application works without any of these keys.
-* Create SQLite configuration.
-* Implement:
-
-```text
-GET /health
-```
-
-* Connect the frontend to the backend health endpoint.
-* Display a clear backend health indicator in the frontend.
-* Record the chosen Python dependency-management approach in `docs/DECISIONS.md`.
+* Microphone permission handling & recording (start, pause/stop, re-record).
+* Upload support (drag/drop and file picker) for `.wav`, `.mp3`, `.ogg`, `.webm`, `.m4a`, `.flac`.
+* Client-side audio validation using Web Audio API:
+  - Microphone permission denied (specific guidance).
+  - No microphone/device found.
+  - Unsupported audio formats.
+  - Empty audio (0 bytes).
+  - Audio too short (< 1.5s).
+  - Silence-only audio (RMS amplitude check below threshold).
+* Audio playback/review widget with waveform playback preview and metadata (duration, sample rate, channels, file size).
+* Clean state output: Validated `AudioData` object (Blob, URL, metadata, PCM buffer).
+* Zero backend calls in PR-01 per `PHASES.md`.
 
 ---
 
 ## Definition of Done
 
-PR-00 is complete when:
+PR-01 is complete when:
 
-* [ ] Repository structure matches the architecture defined in `PRD.md`.
-* [ ] Frontend starts successfully.
-* [ ] Backend starts successfully.
-* [ ] `/health` returns a successful response.
-* [ ] Frontend successfully calls the real `/health` endpoint.
-* [ ] Frontend displays `Backend: Healthy`.
-* [ ] SQLite configuration exists.
-* [ ] Optional AI API keys are not required to start or use the core application.
-* [ ] No unnecessary features have been implemented.
-* [ ] No ML models are integrated yet.
-* [ ] No external AI API is required.
-* [ ] Manual smoke check passes.
-* [ ] `MEMORY.md` is updated with the actual architecture.
-* [ ] `tasks/BACKLOG.md` is updated.
-* [ ] `CURRENT.md` is moved to PR-01 after completion.
+* [ ] User can Record → Stop → Review → Re-record.
+* [ ] User can Upload (picker or drag/drop) → Validate → Review.
+* [ ] Specific validation errors are shown for:
+  - Permission denied
+  - No mic found
+  - Audio too short (<1.5s)
+  - Silence only
+  - Empty or invalid audio file
+* [ ] Audio preview player with play/pause/scrub works.
+* [ ] Validated audio Blob & metadata are held in frontend state ready for PR-02/PR-03.
+* [ ] No backend API calls made for audio processing yet.
+* [ ] `npm run build` succeeds without lint or type errors.
+* [ ] `MEMORY.md` is updated.
+* [ ] `CURRENT.md` is updated for PR-02.
+* [ ] PR branch pushed and execution stops for review.
 
 ---
 
@@ -85,38 +65,21 @@ PR-00 is complete when:
 Primarily:
 
 ```text
-/frontend/**
-/backend/**
-/ml/**
-/.env.example
-/docs/DECISIONS.md
+/frontend/src/types/audio.ts
+/frontend/src/lib/audio-validator.ts
+/frontend/src/hooks/use-audio-recorder.ts
+/frontend/src/components/audio/audio-capture.tsx
+/frontend/src/components/audio/audio-player.tsx
+/frontend/src/app/page.tsx
 /MEMORY.md
-/tasks/BACKLOG.md
 /tasks/CURRENT.md
 ```
-
-Do not modify unrelated product features or implement later PRs.
-
----
-
-## Dependencies
-
-None.
-
-This is the foundation PR.
 
 ---
 
 ## Next PR
 
-After PR-00 is completed and manually verified:
+After PR-01 is completed and reviewed:
 
-**PR-01 — Audio Capture & Upload**
-
-Branch:
-
-```text
-pr-01-audio-capture
-```
-
-Do not begin PR-01 work as part of PR-00.
+**PR-02 — Live Waveform + Spectrogram**
+Branch: `pr-02-audio-visualization`
