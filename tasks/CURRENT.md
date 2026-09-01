@@ -7,17 +7,17 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Core Voice Analysis
-**Current PR:** PR-06
-**Current Branch:** `pr-06-risk-engine`
+**Current PR:** PR-07
+**Current Branch:** `pr-07-threat-dashboard`
 
 ---
 
 ## Current Task
 
-### PR-06 — Risk Engine
+### PR-07 — Live Threat Dashboard
 
 **Tier:** T1 — Core Voice Analysis
-**Test:** `[TEST: required]`
+**Test:** `[TEST: skip]`
 
 Implement real-time audio visualization using Web Audio API and Canvas.
 
