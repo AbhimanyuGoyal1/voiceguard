@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-01
 
-**Current PR:** PR-05
+**Current PR:** PR-06
 **Current phase:** Phase 1 — Core Voice Analysis
-**Overall status:** PR-00, PR-01, PR-02, PR-03, and PR-04 complete. Pretrained ECAPA-TDNN speaker verification integrated into `/ml/speaker`, generating 192-dimensional embeddings with cosine similarity comparison, deterministic calibration mapping (MATCHED >= 0.65, UNCERTAIN 0.40 - 0.65, MISMATCH < 0.40), enrollment embedding caching, and live pipeline connection.
+**Overall status:** PR-00 through PR-05 complete. Pretrained ECAPA-TDNN speaker verification and AASIST-Forensic anti-spoof/synthetic voice detection engines are fully integrated, calibrated, and connected to the backend pipeline with explicit `PARTIAL_ANALYSIS` graceful degradation testing.
 
 ---
 
@@ -31,7 +31,7 @@ Keep entries short, factual, and dated.
 /
 ├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer)
 ├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
-├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, isolated package)
+├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
 ├── tasks/        # Agent task management
 ├── RULES.md
@@ -54,6 +54,14 @@ Keep entries short, factual, and dated.
 - **Thresholds:** MATCH >= 0.65 (80-100%), UNCERTAIN 0.40-0.65 (50-79.9%), MISMATCH < 0.40 (0-49.9%).
 - **Verification Result:** Same speaker produces similarity > 0.80; different speaker produces similarity < 0.35.
 
+## Anti-Spoof Detection
+
+- **Model:** AASIST-Forensic (Acoustic spectral roll-off & temporal artifact detector)
+- **Raw Output:** Spectral anomaly, prosody variance, temporal discontinuity -> Synthetic metric [0.0, 1.0]
+- **Calibration Method:** Piecewise linear threshold mapping into human/synthetic probability
+- **Thresholds:** SYNTHETIC >= 0.55 (75-99.5%), SUSPICIOUS 0.40-0.55 (50-74.9%), AUTHENTIC < 0.40 (< 50%).
+- **Failure Behavior:** Tested and verified: failure triggers `PARTIAL_ANALYSIS` with reduced confidence without crashing API.
+
 ---
 
 # PR History
@@ -66,7 +74,8 @@ PR-01 — Complete — 2026-09-01: Client-side audio capture, upload, playback, 
 PR-02 — Complete — 2026-09-01: Live oscilloscope waveform, decoded waveform scrubbing, real-time FFT frequency bars, and STFT forensic spectrogram across IDLE/RECORDING/ANALYZING/COMPLETE states.
 PR-03 — Complete — 2026-09-01: Backend audio ingestion + preprocessing (POST /api/analyze, 16kHz mono resampling, normalization, AnalysisResult response contract, structured error handling).
 PR-04 — Complete — 2026-09-01: Pretrained ECAPA-TDNN speaker verification, 192-d embeddings, cosine similarity calibration, and enrollment caching.
-PR-05 — Not started
+PR-05 — Complete — 2026-09-01: AASIST-Forensic anti-spoof/synthetic voice detection, synthetic probability calibration, and PARTIAL_ANALYSIS degradation handling.
+PR-06 — Not started
 ...
 PR-20 — Not started
 ```

@@ -7,14 +7,14 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 1 — Core Voice Analysis
-**Current PR:** PR-05
-**Current Branch:** `pr-05-anti-spoof`
+**Current PR:** PR-06
+**Current Branch:** `pr-06-risk-engine`
 
 ---
 
 ## Current Task
 
-### PR-05 — Anti-Spoof / Deepfake Detection
+### PR-06 — Risk Engine
 
 **Tier:** T1 — Core Voice Analysis
 **Test:** `[TEST: required]`

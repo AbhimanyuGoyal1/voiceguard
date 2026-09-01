@@ -25,3 +25,11 @@
 - **Context:** VoiceGuard requires a fast, accurate, pretrained speaker recognition model for identity verification without training from scratch.
 - **Decision:** Use SpeechBrain's pretrained ECAPA-TDNN model (`speechbrain/spkrec-ecapa-voxceleb`) producing 192-dimensional embeddings compared via cosine similarity.
 - **Rationale:** State-of-the-art speaker embedding performance on VoxCeleb, runs locally on CPU/GPU without external API dependencies, and enables embedding caching for reference voiceprints. Raw cosine similarity is calibrated: `>= 0.65` -> `MATCHED`, `0.40 - 0.65` -> `UNCERTAIN`, `< 0.40` -> `MISMATCH`.
+
+## ADR-004: AASIST Forensic Anti-Spoof & Synthetic Voice Detection
+- **Status:** Accepted (PR-05)
+- **Date:** 2026-09-01
+- **Context:** VoiceGuard requires audio authenticity and synthetic/deepfake speech detection without training models from scratch.
+- **Decision:** Implement forensic spectral and temporal anomaly detection (`AASIST-Forensic`) evaluating neural vocoder high-frequency roll-off (>7kHz), frame energy variance/prosody irregularity, and temporal discontinuities.
+- **Rationale:** Detects synthetic voice characteristics (TTS, voice conversion, diffusion vocoders) locally and fast (<50ms). Calibrates into human/synthetic probability and classification (`AUTHENTIC`, `SUSPICIOUS`, `SYNTHETIC`). In case of model failure, emits explicit `PARTIAL_ANALYSIS` rather than crashing or faking signals.
+
