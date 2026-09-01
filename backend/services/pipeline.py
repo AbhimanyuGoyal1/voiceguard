@@ -16,6 +16,7 @@ from backend.schemas.analysis import (
 from ml.speaker import speaker_verifier
 from ml.antispoof import antispoof_detector
 from backend.services.risk_engine import evaluate_risk
+from backend.services.explainability import generate_explainability_report
 
 
 def build_analysis_pipeline_response(
@@ -29,8 +30,8 @@ def build_analysis_pipeline_response(
 ) -> AnalysisResult:
     """
     Builds the complete AnalysisResult contract using preprocessed audio metadata,
-    real ECAPA-TDNN speaker verification, real anti-spoof detection, and the authoritative
-    Risk Engine scoring evaluation.
+    real ECAPA-TDNN speaker verification, real anti-spoof detection, authoritative
+    Risk Engine evaluation, and deterministic explainability generation.
     """
     sid = session_id or f"session_{uuid.uuid4().hex[:12]}"
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -82,7 +83,7 @@ def build_analysis_pipeline_response(
                     confidence=1.0,
                     is_mock=True,
                 )
-        except Exception as e:
+        except Exception:
             is_degraded = True
             is_speaker_ok = False
             unavailable_signals.append("speaker_verification")
@@ -142,7 +143,7 @@ def build_analysis_pipeline_response(
                     "pitch_irregularity": 0.0,
                     "temporal_artifacts": 0.0,
                 }
-        except Exception as e:
+        except Exception:
             is_degraded = True
             is_antispoof_ok = False
             unavailable_signals.append("authenticity_detection")
@@ -160,7 +161,7 @@ def build_analysis_pipeline_response(
                 "temporal_artifacts": 0.0,
             }
 
-    # 3. Evaluate Authoritative Risk using Risk Engine
+    # 3. Authoritative Risk Engine Scoring
     risk = evaluate_risk(
         speaker_match_score=speaker.match_score,
         synthetic_probability=authenticity.synthetic_probability,
@@ -174,39 +175,18 @@ def build_analysis_pipeline_response(
 
     state = "PARTIAL_ANALYSIS" if is_degraded else "COMPLETE"
 
-    # Evidence Explanation Generation
-    if not is_degraded:
-        if risk.level == "CRITICAL" and speaker.match_score >= 70.0 and authenticity.synthetic_probability >= 70.0:
-            evidence_summary = (
-                f"TARGETED AI CLONE DETECTED: Speaker match is HIGH ({speaker.match_score}%), "
-                f"but voice displays STRONG SYNTHETIC CHARACTERISTICS ({authenticity.synthetic_probability}% synthetic). "
-                f"Immediate security verification required."
-            )
-        elif authenticity.classification == "SYNTHETIC":
-            evidence_summary = (
-                f"Synthetic speech detected ({authenticity.synthetic_probability}%). "
-                f"Acoustic spectral anomalies: {anti_evidence['spectral_anomaly']}%."
-            )
-        elif speaker.status != "MATCHED":
-            evidence_summary = (
-                f"Speaker mismatch against enrolled identity '{enrolled_speaker_id}' ({speaker.match_score}% match). "
-                f"Voice appears organic ({authenticity.human_probability}% human)."
-            )
-        else:
-            evidence_summary = (
-                f"Verified authentic voice for enrolled speaker '{enrolled_speaker_id}' "
-                f"({speaker.match_score}% match, {authenticity.human_probability}% human)."
-            )
-    else:
-        evidence_summary = f"Degraded Analysis: Missing required signals ({', '.join(unavailable_signals)})."
-
     evidence = EvidenceSignal(
         spectral_anomaly=anti_evidence["spectral_anomaly"],
         prosody_anomaly=anti_evidence["prosody_anomaly"],
         pitch_irregularity=anti_evidence["pitch_irregularity"],
         temporal_artifacts=anti_evidence["temporal_artifacts"],
         speaker_similarity=speaker.match_score,
-        summary=evidence_summary,
+        summary=(
+            f"Speaker: {speaker.status} ({speaker.match_score}%), Authenticity: {authenticity.classification} "
+            f"({authenticity.synthetic_probability}% synthetic)."
+            if not is_degraded
+            else f"Degraded Analysis: Missing required signals ({', '.join(unavailable_signals)})."
+        ),
         is_mock=speaker.is_mock or authenticity.is_mock,
     )
 
@@ -242,7 +222,8 @@ def build_analysis_pipeline_response(
         ),
     ]
 
-    return AnalysisResult(
+    # Construct complete AnalysisResult
+    result = AnalysisResult(
         session_id=sid,
         timestamp=now_iso,
         mode="LIVE",
@@ -259,3 +240,7 @@ def build_analysis_pipeline_response(
             unavailable_signals=unavailable_signals,
         ),
     )
+
+    # Attach deterministic explainability report
+    result.evidence.summary = generate_explainability_report(result)["reasoning"]
+    return result

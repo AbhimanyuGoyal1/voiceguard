@@ -5,6 +5,7 @@ import { AudioCapture } from "@/components/audio/audio-capture";
 import { RiskMeter } from "@/components/dashboard/risk-meter";
 import { SpeakerCard } from "@/components/dashboard/speaker-card";
 import { AuthenticityCard } from "@/components/dashboard/authenticity-card";
+import { WhyPanel } from "@/components/dashboard/why-panel";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -95,25 +96,27 @@ export function ThreatDashboard() {
           <AuthenticityCard authenticity={analysisResult?.authenticity ?? null} isAnalyzing={isAnalyzing} />
         </div>
 
-        {/* Forensic Evidence Summary & Timeline Events */}
+        {/* PR-08: WHY? Explainability Panel */}
+        {analysisResult && (
+          <div className="w-full">
+            <WhyPanel analysis={analysisResult} />
+          </div>
+        )}
+
+        {/* Forensic Timeline Events */}
         {analysisResult && (
           <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-mono tracking-wider text-slate-300 uppercase flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400" /> Forensic Evidence Summary
+                <CheckCircle2 className="w-4 h-4 text-cyan-400" /> Analysis Event Stream
               </h3>
               <span className="text-xs font-mono text-slate-500">
                 Session: {analysisResult.session_id}
               </span>
             </div>
 
-            <p className="text-sm text-slate-300 leading-relaxed font-sans">
-              {analysisResult.evidence.summary}
-            </p>
-
             {/* Timeline Events List */}
             <div className="space-y-2 mt-4">
-              <h4 className="text-xs font-mono text-slate-400 tracking-wider uppercase">Event Stream</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {analysisResult.timeline.map((evt) => (
                   <div

@@ -70,6 +70,29 @@ export interface DegradationStatus {
   unavailable_signals: string[];
 }
 
+export interface SignalFactor {
+  id: string;
+  name: string;
+  model: string;
+  value: string;
+  status: string;
+  weight: string;
+  impact: string;
+  description: string;
+}
+
+export interface ExplainabilityReport {
+  title: string;
+  verdict_badge: string;
+  headline: string;
+  risk_score: number;
+  risk_level: ThreatSeverity;
+  is_partial: boolean;
+  reasoning: string;
+  recommendation: string;
+  signal_factors: SignalFactor[];
+}
+
 export interface AnalysisResult {
   session_id: string;
   timestamp: string;
@@ -82,4 +105,5 @@ export interface AnalysisResult {
   evidence: EvidenceSignal;
   timeline: TimelineEvent[];
   degradation: DegradationStatus;
+  explanation?: ExplainabilityReport;
 }
