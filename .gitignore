@@ -20,6 +20,10 @@ venv/
 env/
 *.sqlite3
 *.db
+ml/models/
+*.ckpt
+*.pt
+*.bin
 
 # Next.js
 .next/
