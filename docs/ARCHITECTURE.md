@@ -344,60 +344,96 @@ Speaker ML      Anti-Spoof ML
        Dashboard/UI
 ```
 
-The exact sample rate and preprocessing requirements will be determined by the selected model checkpoints and recorded in `ML.md`.
+### Target Audio Format
+
+As established in PR-03:
+- **Target Sample Rate:** `16,000 Hz` (16 kHz standard for ECAPA-TDNN and AASIST models)
+- **Channels:** `1` (Mono channel; multi-channel inputs are downmixed by channel averaging)
+- **Data Type:** `float32` in range `[-1.0, 1.0]`
+- **Normalization:** Peak amplitude normalized to `0.95`
+- **Validation Constraints:** Minimum duration `1.0s`, Maximum duration `60.0s`, RMS energy threshold `0.003`
 
 ---
 
 # 8. Core Analysis Contract
 
-`POST /api/analyze` is the planned core analysis contract.
+`POST /api/analyze` is the central analysis contract established in PR-03.
 
-PR-03 will establish the initial response shape.
+Input:
+- `file`: `UploadFile` (multipart/form-data, supported formats: WAV, MP3, OGG, WebM, FLAC)
+- `session_id`: `Optional[str]`
 
-Later ML phases replace individual mocked fields with real outputs without changing the overall contract unnecessarily.
-
-The conceptual response contains:
-
-```text
-AnalysisResult
-├── session
-│   ├── id
-│   ├── mode
-│   └── state
-│
-├── speaker
-│   ├── match_score
-│   ├── enrolled_identity
-│   └── confidence
-│
-├── authenticity
-│   ├── classification
-│   ├── synthetic_probability
-│   └── human_probability
-│
-├── risk
-│   ├── score
-│   ├── level
-│   └── confidence
-│
-├── evidence
-│   ├── spectral_anomaly
-│   ├── prosody_anomaly
-│   ├── pitch_irregularity
-│   ├── temporal_artifacts
-│   └── speaker_similarity
-│
-├── timeline
-│   └── events[]
-│
-└── degradation
-    ├── status
-    └── reason
+Response Schema (`AnalysisResult`):
+```json
+{
+  "session_id": "session_abc123",
+  "timestamp": "2026-09-01T22:30:00Z",
+  "mode": "LIVE",
+  "state": "COMPLETE",
+  "audio_info": {
+    "duration_seconds": 3.25,
+    "original_sample_rate": 44100,
+    "target_sample_rate": 16000,
+    "channels": 1,
+    "rms_energy": 0.0452,
+    "peak_amplitude": 0.95,
+    "is_silent": false
+  },
+  "speaker": {
+    "match_score": 0.0,
+    "status": "NOT_ENROLLED",
+    "enrolled_identity": "Primary User",
+    "confidence": 1.0,
+    "is_mock": true
+  },
+  "authenticity": {
+    "classification": "AUTHENTIC",
+    "synthetic_probability": 0.0,
+    "human_probability": 100.0,
+    "confidence": 1.0,
+    "is_mock": true
+  },
+  "risk": {
+    "score": 0,
+    "level": "LOW",
+    "confidence": 1.0,
+    "is_partial": false
+  },
+  "evidence": {
+    "spectral_anomaly": 0.0,
+    "prosody_anomaly": 0.0,
+    "pitch_irregularity": 0.0,
+    "temporal_artifacts": 0.0,
+    "speaker_similarity": 0.0,
+    "summary": "Audio ingested and validated successfully.",
+    "is_mock": true
+  },
+  "timeline": [
+    {
+      "id": "evt_123",
+      "timestamp": "2026-09-01T22:30:00Z",
+      "type": "AUDIO_INGESTED",
+      "label": "Audio stream received and decoded",
+      "level": "INFO"
+    }
+  ],
+  "degradation": {
+    "is_degraded": false,
+    "reason": null,
+    "unavailable_signals": []
+  }
+}
 ```
 
-The exact schema is finalized during PR-03.
-
-Agents must not independently invent incompatible response formats after the contract is established.
+Error Response Schema (`ErrorResponse`, HTTP 400 / 500):
+```json
+{
+  "error_code": "INVALID_AUDIO" | "UNSUPPORTED_FORMAT" | "AUDIO_TOO_SHORT" | "EMPTY_AUDIO" | "SILENT_AUDIO" | "PROCESSING_ERROR",
+  "message": "Human readable error description",
+  "detail": "Optional technical detail",
+  "action_hint": "Actionable user remedy guidance"
+}
+```
 
 ---
 
