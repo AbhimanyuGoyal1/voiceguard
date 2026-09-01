@@ -10,7 +10,8 @@ export interface AudioRecorderState {
   audioData: ValidatedAudio | null;
   error: AudioValidationError | null;
   isValidating: boolean;
-  audioLevel: number; // 0.0 - 1.0 for real-time VU indicator
+  audioLevel: number; // 0.0 - 1.0
+  analyserNode: AnalyserNode | null;
 }
 
 export function useAudioRecorder() {
@@ -20,6 +21,7 @@ export function useAudioRecorder() {
   const [error, setError] = useState<AudioValidationError | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -46,6 +48,7 @@ export function useAudioRecorder() {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setAnalyserNode(null);
     setAudioLevel(0);
   }, []);
 
@@ -88,6 +91,7 @@ export function useAudioRecorder() {
       analyser.fftSize = 256;
       source.connect(analyser);
       analyserRef.current = analyser;
+      setAnalyserNode(analyser);
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const updateMeter = () => {
@@ -240,6 +244,7 @@ export function useAudioRecorder() {
     error,
     isValidating,
     audioLevel,
+    analyserNode,
     startRecording,
     stopRecording,
     resetRecording,
