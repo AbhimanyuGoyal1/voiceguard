@@ -9,10 +9,11 @@ import { WhyPanel } from "@/components/dashboard/why-panel";
 import { AttackSimulator } from "@/components/dashboard/attack-simulator";
 import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
 import { SecurityChallenge } from "@/components/dashboard/security-challenge";
+import { IncidentReport } from "@/components/dashboard/incident-report";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -21,6 +22,7 @@ export function ThreatDashboard() {
   const [demoResult, setDemoResult] = useState<AnalysisResult | null>(null);
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
   const [activeTimelineEventId, setActiveTimelineEventId] = useState<string | null>(null);
+  const [showIncidentReport, setShowIncidentReport] = useState<boolean>(false);
 
   const {
     isConnected,
@@ -80,6 +82,21 @@ export function ThreatDashboard() {
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
+          {/* Incident Report Quick Toggle */}
+          {activeResult && (
+            <button
+              onClick={() => setShowIncidentReport(!showIncidentReport)}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                showIncidentReport
+                  ? "bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm"
+                  : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>INCIDENT REPORT</span>
+            </button>
+          )}
+
           {/* Live ↔ Demo Mode Selector */}
           <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-0.5">
             <button
@@ -149,6 +166,14 @@ export function ThreatDashboard() {
               <span>{errorMessage}</span>
             </div>
           </div>
+        )}
+
+        {/* PR-13: Forensic Incident Report Modal / Panel */}
+        {showIncidentReport && activeResult && (
+          <IncidentReport
+            analysis={activeResult}
+            onClose={() => setShowIncidentReport(false)}
+          />
         )}
 
         {/* Attack Simulator Launcher (In Demo Mode) */}

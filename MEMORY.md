@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-02
 
-**Current PR:** PR-13
+**Current PR:** PR-14
 **Current phase:** Phase 3 — Active Defense + Security Operations
-**Overall status:** PR-00 through PR-12 complete. Active Defense Security Challenge (`SecurityChallenge`) implemented and evaluated against strict verification thresholds (`GET /api/challenge/next`, `POST /api/challenge/evaluate`), featuring deterministic challenge phrases, multi-signal verification (speaker similarity >= 65%, synthetic prob < 40%), and automated risk escalation/mitigation.
+**Overall status:** PR-00 through PR-13 complete. Structured on-screen Forensic Incident Report (`IncidentReport`) implemented and integrated into the dashboard, supporting cryptographic incident ID generation, threat classification, acoustic forensic breakdown, clipboard copying, and printable PDF export for both Live and Demo threat events.
 
 ---
 
@@ -29,7 +29,7 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher, Interactive Threat Timeline, Active Defense Security Challenge)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher, Interactive Threat Timeline, Active Defense Security Challenge, Forensic Incident Report)
 ├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, Challenge service /api/challenge, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
@@ -90,7 +90,8 @@ PR-09 — Complete — 2026-09-01: Demo Mode & Scenario Engine, 4 canonical dete
 PR-10 — Complete — 2026-09-01: Interactive Attack Simulator launcher with threat vector selection and simulated pipeline progression.
 PR-11 — Complete — 2026-09-02: Interactive Threat Timeline with chronological event stepping, visual progression across threat levels, and state inspection.
 PR-12 — Complete — 2026-09-02: Active Defense Security Challenge, fixed deterministic phrase pool, and multi-signal pass/fail evaluation.
-PR-13 — Not started
+PR-13 — Complete — 2026-09-02: Structured Forensic Incident Report with threat classification, evidence breakdown, and printable PDF export.
+PR-14 — Not started
 ...
 PR-20 — Not started
 ```
