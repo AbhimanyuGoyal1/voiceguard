@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.api.analyze import router as analyze_router
 from backend.api.scenarios import router as scenarios_router
+from backend.api.challenge import router as challenge_router
 from backend.api.websocket import ws_router
 
 app = FastAPI(
@@ -22,6 +23,7 @@ app.add_middleware(
 # Include API Routers
 app.include_router(analyze_router)
 app.include_router(scenarios_router)
+app.include_router(challenge_router)
 app.include_router(ws_router)
 
 
