@@ -6,18 +6,18 @@
 ## Project Status
 
 **Project:** VoiceGuard
-**Stage:** Phase 6 — Demo Hardening
-**Current PR:** PR-19
-**Current Branch:** `pr-19-error-handling-resilience`
+**Stage:** Phase 6 — Demo Hardening (Final Phase)
+**Current PR:** PR-20
+**Current Branch:** `pr-20-golden-path-rehearsal`
 
 ---
 
 ## Current Task
 
-### PR-19 — Error Handling + Resilience
+### PR-20 — Golden Path Rehearsal + Final Polish
 
-**Tier:** T1 Protection
-**Test:** `[TEST: required]`
+**Tier:** T1
+**Test:** `[TEST: skip]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
 
