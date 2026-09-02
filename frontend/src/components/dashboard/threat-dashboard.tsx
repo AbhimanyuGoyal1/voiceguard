@@ -14,10 +14,11 @@ import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-his
 import { VoiceFingerprint } from "@/components/dashboard/voice-fingerprint";
 import { GlobalThreatMap } from "@/components/dashboard/global-threat-map";
 import { AiSecurityAnalyst } from "@/components/dashboard/ai-security-analyst";
+import { CallSimulator } from "@/components/dashboard/call-simulator";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint, Globe2, Bot } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint, Globe2, Bot, PhoneCall } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -31,6 +32,7 @@ export function ThreatDashboard() {
   const [showFingerprint, setShowFingerprint] = useState<boolean>(false);
   const [showThreatMap, setShowThreatMap] = useState<boolean>(false);
   const [showAiAnalyst, setShowAiAnalyst] = useState<boolean>(true);
+  const [showCallSimulator, setShowCallSimulator] = useState<boolean>(false);
   const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
 
   const {
@@ -96,6 +98,19 @@ export function ThreatDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
+          {/* Telephony Simulator Toggle */}
+          <button
+            onClick={() => setShowCallSimulator(!showCallSimulator)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showCallSimulator
+                ? "bg-emerald-600 text-slate-950 border-emerald-400 font-bold"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <PhoneCall className="w-3.5 h-3.5" />
+            <span>CALL SIMULATOR</span>
+          </button>
+
           {/* AI Analyst Toggle */}
           <button
             onClick={() => setShowAiAnalyst(!showAiAnalyst)}
@@ -232,6 +247,11 @@ export function ThreatDashboard() {
               <span>{errorMessage}</span>
             </div>
           </div>
+        )}
+
+        {/* PR-18: Telephony Call Simulator Component */}
+        {showCallSimulator && (
+          <CallSimulator onAcceptCall={handleRunDemoScenario} isAnalyzing={isAnalyzing} />
         )}
 
         {/* PR-17: AI Security Analyst Briefing Panel */}
