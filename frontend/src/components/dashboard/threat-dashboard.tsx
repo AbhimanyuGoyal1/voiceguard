@@ -8,6 +8,7 @@ import { AuthenticityCard } from "@/components/dashboard/authenticity-card";
 import { WhyPanel } from "@/components/dashboard/why-panel";
 import { AttackSimulator } from "@/components/dashboard/attack-simulator";
 import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
+import { SecurityChallenge } from "@/components/dashboard/security-challenge";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
@@ -60,7 +61,6 @@ export function ThreatDashboard() {
   const activeResult = mode === "DEMO" ? demoResult : liveAnalysisResult;
   const isAnalyzing = mode === "DEMO" ? isDemoLoading : analysisState === "ANALYZING";
 
-  // Timeline Event selection handler to inspect state evolution
   const handleSelectTimelineEvent = (eventId: string) => {
     setActiveTimelineEventId(eventId);
   };
@@ -173,6 +173,11 @@ export function ThreatDashboard() {
           <SpeakerCard speaker={activeResult?.speaker ?? null} isAnalyzing={isAnalyzing} />
           <AuthenticityCard authenticity={activeResult?.authenticity ?? null} isAnalyzing={isAnalyzing} />
         </div>
+
+        {/* PR-12: Active Defense Security Challenge Box */}
+        {activeResult && (
+          <SecurityChallenge analysis={activeResult} />
+        )}
 
         {/* PR-11: Interactive Threat Timeline */}
         {activeResult && (
