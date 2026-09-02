@@ -6,18 +6,18 @@
 ## Project Status
 
 **Project:** VoiceGuard
-**Stage:** Phase 4 — Visual Depth
-**Current PR:** PR-16
-**Current Branch:** `pr-16-global-threat-map`
+**Stage:** Phase 5 — Stretch Features
+**Current PR:** PR-17
+**Current Branch:** `pr-17-ai-security-analyst`
 
 ---
 
 ## Current Task
 
-### PR-16 — Global Threat Map
+### PR-17 — AI Security Analyst
 
-**Tier:** T3 — Visual Depth
-**Test:** `[TEST: skip]`
+**Tier:** T4 — Optional Enrichment / Stretch
+**Test:** `[TEST: required]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
 
