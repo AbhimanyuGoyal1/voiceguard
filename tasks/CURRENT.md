@@ -6,17 +6,17 @@
 ## Project Status
 
 **Project:** VoiceGuard
-**Stage:** Phase 3 — Active Defense + Security Operations
-**Current PR:** PR-14
-**Current Branch:** `pr-14-attack-history`
+**Stage:** Phase 4 — Visual Depth
+**Current PR:** PR-16
+**Current Branch:** `pr-16-global-threat-map`
 
 ---
 
 ## Current Task
 
-### PR-14 — Attack History
+### PR-16 — Global Threat Map
 
-**Tier:** T2 — Security Operations
+**Tier:** T3 — Visual Depth
 **Test:** `[TEST: skip]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
