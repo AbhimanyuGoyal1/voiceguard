@@ -13,10 +13,11 @@ import { IncidentReport } from "@/components/dashboard/incident-report";
 import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-history";
 import { VoiceFingerprint } from "@/components/dashboard/voice-fingerprint";
 import { GlobalThreatMap } from "@/components/dashboard/global-threat-map";
+import { AiSecurityAnalyst } from "@/components/dashboard/ai-security-analyst";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint, Globe2 } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint, Globe2, Bot } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -29,6 +30,7 @@ export function ThreatDashboard() {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showFingerprint, setShowFingerprint] = useState<boolean>(false);
   const [showThreatMap, setShowThreatMap] = useState<boolean>(false);
+  const [showAiAnalyst, setShowAiAnalyst] = useState<boolean>(true);
   const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
 
   const {
@@ -94,7 +96,20 @@ export function ThreatDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
-          {/* Threat Map Toggle Button */}
+          {/* AI Analyst Toggle */}
+          <button
+            onClick={() => setShowAiAnalyst(!showAiAnalyst)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showAiAnalyst
+                ? "bg-indigo-600 text-white border-indigo-400 shadow-sm"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>AI ANALYST</span>
+          </button>
+
+          {/* Threat Map Toggle */}
           <button
             onClick={() => setShowThreatMap(!showThreatMap)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -107,7 +122,7 @@ export function ThreatDashboard() {
             <span>GLOBAL MAP</span>
           </button>
 
-          {/* Fingerprint Toggle Button */}
+          {/* Fingerprint Toggle */}
           <button
             onClick={() => setShowFingerprint(!showFingerprint)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -120,7 +135,7 @@ export function ThreatDashboard() {
             <span>2D FINGERPRINT</span>
           </button>
 
-          {/* History Toggle Button */}
+          {/* History Toggle */}
           <button
             onClick={() => setShowHistory(!showHistory)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -217,6 +232,11 @@ export function ThreatDashboard() {
               <span>{errorMessage}</span>
             </div>
           </div>
+        )}
+
+        {/* PR-17: AI Security Analyst Briefing Panel */}
+        {showAiAnalyst && activeResult && (
+          <AiSecurityAnalyst analysis={activeResult} />
         )}
 
         {/* PR-16: Global Threat Map (Simulated Threat Telemetry) */}
