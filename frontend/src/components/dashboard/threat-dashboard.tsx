@@ -7,6 +7,7 @@ import { SpeakerCard } from "@/components/dashboard/speaker-card";
 import { AuthenticityCard } from "@/components/dashboard/authenticity-card";
 import { WhyPanel } from "@/components/dashboard/why-panel";
 import { AttackSimulator } from "@/components/dashboard/attack-simulator";
+import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
@@ -18,6 +19,7 @@ export function ThreatDashboard() {
   const [selectedScenario, setSelectedScenario] = useState<string>("ai_voice_clone");
   const [demoResult, setDemoResult] = useState<AnalysisResult | null>(null);
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
+  const [activeTimelineEventId, setActiveTimelineEventId] = useState<string | null>(null);
 
   const {
     isConnected,
@@ -31,6 +33,7 @@ export function ThreatDashboard() {
 
   const handleAudioCaptured = async (audio: ValidatedAudio | null) => {
     setActiveAudio(audio);
+    setActiveTimelineEventId(null);
     if (audio && audio.blob) {
       await analyzeViaHttp(audio.blob, "Primary User");
     }
@@ -39,8 +42,8 @@ export function ThreatDashboard() {
   const handleRunDemoScenario = async (scenarioId: string) => {
     setIsDemoLoading(true);
     setSelectedScenario(scenarioId);
+    setActiveTimelineEventId(null);
     try {
-      // Simulate real-time pipeline progression delay
       await new Promise((resolve) => setTimeout(resolve, 350));
       const res = await fetch(`http://localhost:8000/api/scenarios/${scenarioId}`);
       if (res.ok) {
@@ -56,6 +59,11 @@ export function ThreatDashboard() {
 
   const activeResult = mode === "DEMO" ? demoResult : liveAnalysisResult;
   const isAnalyzing = mode === "DEMO" ? isDemoLoading : analysisState === "ANALYZING";
+
+  // Timeline Event selection handler to inspect state evolution
+  const handleSelectTimelineEvent = (eventId: string) => {
+    setActiveTimelineEventId(eventId);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -166,50 +174,20 @@ export function ThreatDashboard() {
           <AuthenticityCard authenticity={activeResult?.authenticity ?? null} isAnalyzing={isAnalyzing} />
         </div>
 
+        {/* PR-11: Interactive Threat Timeline */}
+        {activeResult && (
+          <ThreatTimeline
+            timeline={activeResult.timeline}
+            activeEventId={activeTimelineEventId}
+            onSelectEvent={handleSelectTimelineEvent}
+            analysisMode={activeResult.mode}
+          />
+        )}
+
         {/* WHY? Explainability Panel */}
         {activeResult && (
           <div className="w-full">
             <WhyPanel analysis={activeResult} />
-          </div>
-        )}
-
-        {/* Forensic Timeline Events */}
-        {activeResult && (
-          <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-mono tracking-wider text-slate-300 uppercase flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400" /> Analysis Event Stream
-              </h3>
-              <span className="text-xs font-mono text-slate-500">
-                Mode: {activeResult.mode} // Session: {activeResult.session_id}
-              </span>
-            </div>
-
-            {/* Timeline Events List */}
-            <div className="space-y-2 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {activeResult.timeline.map((evt) => (
-                  <div
-                    key={evt.id}
-                    className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5 text-xs font-mono"
-                  >
-                    <span
-                      className={`w-2 h-2 mt-1 rounded-full ${
-                        evt.level === "CRITICAL"
-                          ? "bg-red-500 animate-ping"
-                          : evt.level === "WARN"
-                          ? "bg-yellow-500"
-                          : "bg-emerald-500"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <div className="text-slate-200 font-semibold">{evt.label}</div>
-                      {evt.details && <div className="text-slate-500 text-[11px]">{evt.details}</div>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </main>

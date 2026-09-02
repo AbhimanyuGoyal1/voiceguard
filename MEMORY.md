@@ -15,11 +15,11 @@ Keep entries short, factual, and dated.
 
 # Current Status
 
-**Last updated:** 2026-09-01
+**Last updated:** 2026-09-02
 
-**Current PR:** PR-11
-**Current phase:** Phase 2 — Resilience & Threat Simulation
-**Overall status:** PR-00 through PR-10 complete. Interactive Attack Simulator (`AttackSimulator`) integrated into the dashboard, driving the canonical scenario engine across all 4 attack vectors (Genuine Voice, AI Voice Clone, Replay Attack, Unknown Speaker) with full ML pipeline rendering.
+**Current PR:** PR-12
+**Current phase:** Phase 3 — Active Defense + Security Operations
+**Overall status:** PR-00 through PR-11 complete. Interactive Threat Timeline (`ThreatTimeline`) integrated into the dashboard, supporting chronological event stepping, visual progression across threat levels, and state inspection for both Live Microphone and Demo Simulation modes.
 
 ---
 
@@ -29,7 +29,7 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher, Interactive Threat Timeline)
 ├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, WebSocket streaming /ws/analyze, Analysis contract, SQLite via SQLAlchemy + aiosqlite)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
@@ -88,7 +88,8 @@ PR-07 — Complete — 2026-09-01: Live Threat Dashboard SOC interface, WebSocke
 PR-08 — Complete — 2026-09-01: Deterministic "WHY?" Explainability Panel, acoustic anomaly attribution, and evidence breakdown.
 PR-09 — Complete — 2026-09-01: Demo Mode & Scenario Engine, 4 canonical deterministic fixtures (Genuine, Clone, Replay, Unknown), and Live/Demo switching.
 PR-10 — Complete — 2026-09-01: Interactive Attack Simulator launcher with threat vector selection and simulated pipeline progression.
-PR-11 — Not started
+PR-11 — Complete — 2026-09-02: Interactive Threat Timeline with chronological event stepping, visual progression across threat levels, and state inspection.
+PR-12 — Not started
 ...
 PR-20 — Not started
 ```
