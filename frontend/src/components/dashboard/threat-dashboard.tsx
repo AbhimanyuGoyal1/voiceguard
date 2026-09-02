@@ -12,10 +12,11 @@ import { SecurityChallenge } from "@/components/dashboard/security-challenge";
 import { IncidentReport } from "@/components/dashboard/incident-report";
 import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-history";
 import { VoiceFingerprint } from "@/components/dashboard/voice-fingerprint";
+import { GlobalThreatMap } from "@/components/dashboard/global-threat-map";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint, Globe2 } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -26,7 +27,8 @@ export function ThreatDashboard() {
   const [activeTimelineEventId, setActiveTimelineEventId] = useState<string | null>(null);
   const [showIncidentReport, setShowIncidentReport] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
-  const [showFingerprint, setShowFingerprint] = useState<boolean>(true);
+  const [showFingerprint, setShowFingerprint] = useState<boolean>(false);
+  const [showThreatMap, setShowThreatMap] = useState<boolean>(false);
   const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
 
   const {
@@ -91,7 +93,20 @@ export function ThreatDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
+          {/* Threat Map Toggle Button */}
+          <button
+            onClick={() => setShowThreatMap(!showThreatMap)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showThreatMap
+                ? "bg-amber-600 text-slate-950 border-amber-400 font-bold"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <Globe2 className="w-3.5 h-3.5" />
+            <span>GLOBAL MAP</span>
+          </button>
+
           {/* Fingerprint Toggle Button */}
           <button
             onClick={() => setShowFingerprint(!showFingerprint)}
@@ -203,6 +218,9 @@ export function ThreatDashboard() {
             </div>
           </div>
         )}
+
+        {/* PR-16: Global Threat Map (Simulated Threat Telemetry) */}
+        {showThreatMap && <GlobalThreatMap />}
 
         {/* PR-14: Attack History Registry Panel */}
         {showHistory && (
