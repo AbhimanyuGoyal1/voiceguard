@@ -11,10 +11,11 @@ import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
 import { SecurityChallenge } from "@/components/dashboard/security-challenge";
 import { IncidentReport } from "@/components/dashboard/incident-report";
 import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-history";
+import { VoiceFingerprint } from "@/components/dashboard/voice-fingerprint";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History, Fingerprint } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -25,6 +26,7 @@ export function ThreatDashboard() {
   const [activeTimelineEventId, setActiveTimelineEventId] = useState<string | null>(null);
   const [showIncidentReport, setShowIncidentReport] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showFingerprint, setShowFingerprint] = useState<boolean>(true);
   const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
 
   const {
@@ -90,6 +92,19 @@ export function ThreatDashboard() {
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono">
+          {/* Fingerprint Toggle Button */}
+          <button
+            onClick={() => setShowFingerprint(!showFingerprint)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showFingerprint
+                ? "bg-cyan-600 text-slate-950 border-cyan-400 font-bold"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <Fingerprint className="w-3.5 h-3.5" />
+            <span>2D FINGERPRINT</span>
+          </button>
+
           {/* History Toggle Button */}
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -227,6 +242,11 @@ export function ThreatDashboard() {
           <SpeakerCard speaker={activeResult?.speaker ?? null} isAnalyzing={isAnalyzing} />
           <AuthenticityCard authenticity={activeResult?.authenticity ?? null} isAnalyzing={isAnalyzing} />
         </div>
+
+        {/* PR-15: 2D Voice Fingerprint PCA Scatter Map (D3.js) */}
+        {showFingerprint && (
+          <VoiceFingerprint scenarioId={mode === "DEMO" ? selectedScenario : undefined} />
+        )}
 
         {/* PR-12: Active Defense Security Challenge Box */}
         {activeResult && (

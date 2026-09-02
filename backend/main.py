@@ -8,6 +8,7 @@ from backend.api.analyze import router as analyze_router
 from backend.api.scenarios import router as scenarios_router
 from backend.api.challenge import router as challenge_router
 from backend.api.history import router as history_router
+from backend.api.fingerprint import router as fingerprint_router
 from backend.api.websocket import ws_router
 
 
@@ -18,7 +19,6 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     except Exception:
-        # DB failure must never block application startup
         pass
     yield
 
@@ -43,6 +43,7 @@ app.include_router(analyze_router)
 app.include_router(scenarios_router)
 app.include_router(challenge_router)
 app.include_router(history_router)
+app.include_router(fingerprint_router)
 app.include_router(ws_router)
 
 

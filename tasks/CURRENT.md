@@ -7,14 +7,14 @@
 
 **Project:** VoiceGuard
 **Stage:** Phase 4 — Visual Depth
-**Current PR:** PR-15
-**Current Branch:** `pr-15-voice-fingerprint`
+**Current PR:** PR-16
+**Current Branch:** `pr-16-global-threat-map`
 
 ---
 
 ## Current Task
 
-### PR-15 — Voice Fingerprint
+### PR-16 — Global Threat Map
 
 **Tier:** T3 — Visual Depth
 **Test:** `[TEST: skip]`
