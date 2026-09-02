@@ -17,9 +17,9 @@ Keep entries short, factual, and dated.
 
 **Last updated:** 2026-09-02
 
-**Current PR:** PR-17
+**Current PR:** PR-18
 **Current phase:** Phase 5 — Stretch Features
-**Overall status:** PR-00 through PR-16 complete. Global Threat Map (`GlobalThreatMap`) built with interactive vector canvas coordinates, simulated telemetry nodes, and prominent, permanent `SIMULATED THREAT INTELLIGENCE` badging in full compliance with RULES.md.
+**Overall status:** PR-00 through PR-17 complete. AI Security Analyst natural language explanation layer (`AiSecurityAnalyst`) implemented with strict 3.0s timeout, zero-hallucination deterministic fallback engine, and explicit executive summary / forensic reasoning / remediation directives.
 
 ---
 
@@ -29,8 +29,8 @@ Keep entries short, factual, and dated.
 
 ```text
 /
-├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher, Interactive Threat Timeline, Active Defense Security Challenge, Forensic Incident Report, Attack History Registry, 2D Voice Fingerprint D3 Map, Global Threat Map)
-├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, Challenge service /api/challenge, Attack History /api/history, Voice Fingerprint PCA /api/fingerprint, Threat Map Telemetry /api/threat-map, SQLite persistence, WebSocket streaming /ws/analyze, Analysis contract)
+├── frontend/     # Next.js (App Router, TypeScript, Tailwind CSS v4, Web Audio API validator, Oscilloscope & STFT Spectrogram visualizer, SOC Threat Dashboard, WHY? Explainability Panel, Attack Simulator Launcher, Interactive Threat Timeline, Active Defense Security Challenge, Forensic Incident Report, Attack History Registry, 2D Voice Fingerprint D3 Map, Global Threat Map, AI Security Analyst)
+├── backend/      # FastAPI / Python (Audio preprocessor, 16kHz resampler, Risk Engine, Explainability engine, Scenario engine /api/scenarios, Challenge service /api/challenge, Attack History /api/history, Voice Fingerprint PCA /api/fingerprint, Threat Map Telemetry /api/threat-map, AI Security Analyst /api/analyst, SQLite persistence, WebSocket streaming /ws/analyze, Analysis contract)
 ├── ml/           # ML loading + inference utilities (ECAPA-TDNN speaker verification, AASIST anti-spoof detection)
 ├── docs/         # Architecture and technical documentation
 ├── tasks/        # Agent task management
@@ -94,7 +94,8 @@ PR-13 — Complete — 2026-09-02: Structured Forensic Incident Report with thre
 PR-14 — Complete — 2026-09-02: Attack History Registry with SQLite persistence, severity filtering, and click-through inspection.
 PR-15 — Complete — 2026-09-02: 2D Voice Fingerprint PCA acoustic embedding projection with D3.js interactive canvas.
 PR-16 — Complete — 2026-09-02: Global Threat Map with interactive telemetry nodes and permanent SIMULATED THREAT INTELLIGENCE badging.
-PR-17 — Not started
+PR-17 — Complete — 2026-09-02: AI Security Analyst with strict <= 3.0s timeout and zero-hallucination deterministic fallback.
+PR-18 — Not started
 ...
 PR-20 — Not started
 ```
