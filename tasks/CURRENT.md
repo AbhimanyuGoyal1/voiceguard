@@ -6,18 +6,18 @@
 ## Project Status
 
 **Project:** VoiceGuard
-**Stage:** Phase 5 — Stretch Features
-**Current PR:** PR-18
-**Current Branch:** `pr-18-call-simulator`
+**Stage:** Phase 6 — Demo Hardening
+**Current PR:** PR-19
+**Current Branch:** `pr-19-error-handling-resilience`
 
 ---
 
 ## Current Task
 
-### PR-18 — Call / Conversation Simulator
+### PR-19 — Error Handling + Resilience
 
-**Tier:** T4 — Stretch
-**Test:** `[TEST: skip]`
+**Tier:** T1 Protection
+**Test:** `[TEST: required]`
 
 Assemble the main Security Operations Center (SOC) & Audio Forensics Dashboard connecting real backend analysis (`POST /api/analyze` and WebSocket streaming `/ws/analyze`).
 
