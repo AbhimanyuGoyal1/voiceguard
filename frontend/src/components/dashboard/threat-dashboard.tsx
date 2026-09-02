@@ -10,10 +10,11 @@ import { AttackSimulator } from "@/components/dashboard/attack-simulator";
 import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
 import { SecurityChallenge } from "@/components/dashboard/security-challenge";
 import { IncidentReport } from "@/components/dashboard/incident-report";
+import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-history";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult } from "@/types/analysis";
-import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText } from "lucide-react";
+import { Activity, Radio, Cpu, RefreshCw, AlertCircle, CheckCircle2, Sparkles, FileText, History } from "lucide-react";
 
 export function ThreatDashboard() {
   const [mode, setMode] = useState<"LIVE" | "DEMO">("LIVE");
@@ -23,6 +24,8 @@ export function ThreatDashboard() {
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
   const [activeTimelineEventId, setActiveTimelineEventId] = useState<string | null>(null);
   const [showIncidentReport, setShowIncidentReport] = useState<boolean>(false);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
 
   const {
     isConnected,
@@ -67,6 +70,11 @@ export function ThreatDashboard() {
     setActiveTimelineEventId(eventId);
   };
 
+  const handleSelectHistoryIncident = (incident: IncidentRecord) => {
+    setSelectedHistoryIncidentId(incident.id);
+    setShowIncidentReport(true);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Top SOC Status Bar */}
@@ -81,7 +89,20 @@ export function ThreatDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-mono">
+        <div className="flex items-center gap-3 text-xs font-mono">
+          {/* History Toggle Button */}
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showHistory
+                ? "bg-purple-600 text-white border-purple-400 shadow-sm"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>HISTORY</span>
+          </button>
+
           {/* Incident Report Quick Toggle */}
           {activeResult && (
             <button
@@ -166,6 +187,14 @@ export function ThreatDashboard() {
               <span>{errorMessage}</span>
             </div>
           </div>
+        )}
+
+        {/* PR-14: Attack History Registry Panel */}
+        {showHistory && (
+          <AttackHistory
+            onSelectIncident={handleSelectHistoryIncident}
+            activeIncidentId={selectedHistoryIncidentId}
+          />
         )}
 
         {/* PR-13: Forensic Incident Report Modal / Panel */}

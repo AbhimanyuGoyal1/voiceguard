@@ -1,15 +1,33 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
 from backend.config import settings
+from backend.database import engine, Base
 from backend.api.analyze import router as analyze_router
 from backend.api.scenarios import router as scenarios_router
 from backend.api.challenge import router as challenge_router
+from backend.api.history import router as history_router
 from backend.api.websocket import ws_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize SQLite database tables on application startup
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception:
+        # DB failure must never block application startup
+        pass
+    yield
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="VoiceGuard API — Voice Impersonation and Deepfake Defense",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -24,6 +42,7 @@ app.add_middleware(
 app.include_router(analyze_router)
 app.include_router(scenarios_router)
 app.include_router(challenge_router)
+app.include_router(history_router)
 app.include_router(ws_router)
 
 
