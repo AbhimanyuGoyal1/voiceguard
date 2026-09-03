@@ -33,20 +33,66 @@ class SpeakerVerificationEngine:
         self._preload_default_enrollments()
 
     def _preload_default_enrollments(self):
-        """Pre-enrolls default genuine primary identity using user natural voice if available."""
+        """Pre-enrolls default genuine primary identity and authenticated user voices."""
+        # 1. First enroll authenticated users if authenticatedusers directory exists
+        self._preload_authenticated_users()
+
+        # 2. Pre-enroll default genuine primary identity using user natural voice if not already enrolled
         paths = [
             "frontend/public/audio/samples/user_natural_primary.wav",
             "frontend/public/audio/samples/genuine_primary_1.wav",
         ]
-        for sample_path in paths:
-            if os.path.exists(sample_path):
-                try:
-                    import soundfile as sf
-                    data, sr = sf.read(sample_path)
-                    self.enroll_speaker("Primary User", data)
-                    break
-                except Exception:
-                    pass
+        with self._cache_lock:
+            has_primary = "Primary User" in self._enrolled_cache
+
+        if not has_primary:
+            for sample_path in paths:
+                if os.path.exists(sample_path):
+                    try:
+                        import soundfile as sf
+                        data, sr = sf.read(sample_path)
+                        self.enroll_speaker("Primary User", data)
+                        break
+                    except Exception:
+                        pass
+
+    def _preload_authenticated_users(self, folder_path: str = "authenticatedusers"):
+        """
+        Scans and enrolls authenticated user audio recordings.
+        Uses audio_preprocessor's decode_and_validate_audio to sanitize
+        non-standard headers, resample to 16kHz mono, and extract ECAPA embeddings.
+        """
+        if not os.path.exists(folder_path):
+            return
+
+        supported_exts = {".mpeg", ".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac"}
+        for fname in sorted(os.listdir(folder_path)):
+            name, ext = os.path.splitext(fname)
+            if ext.lower() not in supported_exts:
+                continue
+
+            speaker_id = name.strip()
+            file_path = os.path.join(folder_path, fname)
+            try:
+                with open(file_path, "rb") as fp:
+                    raw_bytes = fp.read()
+
+                from backend.services.audio_preprocessor import decode_and_validate_audio
+                audio_tensor, _ = decode_and_validate_audio(raw_bytes, filename=fname)
+
+                # Thread-safe enrollment
+                self.enroll_speaker(speaker_id, audio_tensor)
+                # Also canonicalize title-case name (e.g., 'Abhimanyu', 'Arnav', etc.)
+                self.enroll_speaker(speaker_id.capitalize(), audio_tensor)
+            except Exception as e:
+                # Log or ignore bad audio files gracefully without stopping startup
+                pass
+
+        # If Primary User is not yet set, alias the first authenticated user to Primary User
+        with self._cache_lock:
+            if "Primary User" not in self._enrolled_cache and "abhimanyu" in self._enrolled_cache:
+                self._enrolled_cache["Primary User"] = self._enrolled_cache["abhimanyu"]
+
 
     def load_model(self):
         """Loads or initialises SpeechBrain ECAPA-TDNN model."""
