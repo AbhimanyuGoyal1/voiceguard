@@ -72,12 +72,22 @@ class AntiSpoofDetector:
 
         # Forensic Anomaly scoring:
         is_direct_clone = (spectral_flux < 0.15) or (hf_energy < 0.00005) or (spectral_flatness < 0.035)
+        is_hf_anomaly = (hf_energy > 0.005)
+        is_vocoder_conversion = (spectral_flatness > 0.48 and forensic_res.jitter_pct > 18.0)
         is_tts_replay = (hf_energy > 0.005 and intonation_var < 0.20 and forensic_res.pitch_reliable)
 
         if is_direct_clone:
             spectral_anomaly_score = float(np.clip((0.05 - spectral_flatness) * 2000.0, 75.0, 96.0))
             prosody_anomaly_score = 75.0
             temporal_artifacts_score = 70.0
+        elif is_hf_anomaly:
+            spectral_anomaly_score = 86.0
+            prosody_anomaly_score = 82.0
+            temporal_artifacts_score = 80.0
+        elif is_vocoder_conversion:
+            spectral_anomaly_score = 85.0
+            prosody_anomaly_score = 80.0
+            temporal_artifacts_score = 78.0
         elif is_tts_replay:
             spectral_anomaly_score = 82.0
             prosody_anomaly_score = 80.0
@@ -92,6 +102,14 @@ class AntiSpoofDetector:
         # 3. VoiceGuard Forensic Authenticity Scorer
         # Based on configurable weights & baseline statistics from Sample A & B
         forensic_synth_pct = forensic_res.forensic_score
+        if is_direct_clone:
+            forensic_synth_pct = max(forensic_synth_pct, 78.0)
+        elif is_hf_anomaly:
+            forensic_synth_pct = max(forensic_synth_pct, 76.0)
+        elif is_vocoder_conversion:
+            forensic_synth_pct = max(forensic_synth_pct, 75.0)
+        elif is_tts_replay:
+            forensic_synth_pct = max(forensic_synth_pct, 75.0)
         forensic_human_pct = round(100.0 - forensic_synth_pct, 1)
 
         if forensic_synth_pct >= 55.0:
