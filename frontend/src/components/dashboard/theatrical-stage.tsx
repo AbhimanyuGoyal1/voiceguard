@@ -65,8 +65,69 @@ export function TheatricalStage({
 
   const isClone = analysisResult?.risk.level === "CRITICAL";
   const isReplay = analysisResult?.risk.level === "HIGH";
+  const isMismatch =
+    analysisResult?.speaker.status === "MISMATCH" ||
+    (analysisResult?.speaker.match_score !== undefined && analysisResult.speaker.match_score < 50);
   const isThreat = isClone || isReplay;
-  const isVerified = analysisResult && !isThreat;
+
+  const getTheatricalVerdict = () => {
+    if (isClone) {
+      return {
+        badge: "SECURITY INCIDENT TRIGGERED",
+        badgeStyle: "text-red-400 bg-red-950/80 border-red-500/40",
+        title: "THREAT DETECTED: AI VOICE CLONE",
+        titleColor: "text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]",
+        cardBorder:
+          "border-red-500/60 bg-gradient-to-b from-red-950/50 via-slate-950 to-slate-950 shadow-[0_0_60px_rgba(239,68,68,0.25)]",
+        glowBar: "bg-gradient-to-r from-transparent via-red-500 to-transparent",
+        desc: "The caller voice acoustically matches enrolled identity 'Primary User', but exhibits high synthetic deepfake probability with neural vocoder spectral artifacts.",
+        action: "TERMINATE",
+        actionColor: "text-red-500",
+      };
+    }
+    if (isReplay) {
+      return {
+        badge: "SUSPICIOUS ACTIVITY FLAGGED",
+        badgeStyle: "text-orange-400 bg-orange-950/80 border-orange-500/40",
+        title: "THREAT DETECTED: SUSPICIOUS TRANSMISSION",
+        titleColor: "text-orange-400 drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]",
+        cardBorder:
+          "border-orange-500/60 bg-gradient-to-b from-orange-950/50 via-slate-950 to-slate-950 shadow-[0_0_60px_rgba(249,115,22,0.25)]",
+        glowBar: "bg-gradient-to-r from-transparent via-orange-500 to-transparent",
+        desc: "Anomalous audio transmission detected with elevated spectral and acoustic irregularity indicators.",
+        action: "CHALLENGE",
+        actionColor: "text-orange-400",
+      };
+    }
+    if (isMismatch) {
+      return {
+        badge: "UNAUTHORIZED IDENTITY DETECTED",
+        badgeStyle: "text-amber-400 bg-amber-950/80 border-amber-500/40",
+        title: "IDENTITY UNVERIFIED: CALLER MISMATCH",
+        titleColor: "text-amber-400 drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]",
+        cardBorder:
+          "border-amber-500/50 bg-gradient-to-b from-amber-950/40 via-slate-950 to-slate-950 shadow-[0_0_45px_rgba(245,158,11,0.2)]",
+        glowBar: "bg-gradient-to-r from-transparent via-amber-400 to-transparent",
+        desc: "Acoustic embedding does NOT match authorized enrolled identity 'Primary User'. Caller identity is unverified. Additional authentication required.",
+        action: "CHALLENGE",
+        actionColor: "text-amber-400",
+      };
+    }
+    return {
+      badge: "IDENTITY & AUTHENTICITY CONFIRMED",
+      badgeStyle: "text-emerald-400 bg-emerald-950/80 border-emerald-500/40",
+      title: "CALL VERIFIED: AUTHENTIC PRIMARY USER",
+      titleColor: "text-emerald-400",
+      cardBorder:
+        "border-emerald-500/50 bg-gradient-to-b from-emerald-950/40 via-slate-950 to-slate-950 shadow-[0_0_45px_rgba(16,185,129,0.18)]",
+      glowBar: "bg-gradient-to-r from-transparent via-emerald-400 to-transparent",
+      desc: "Acoustic signature matches enrolled Primary User with organic wideband vocal harmonics.",
+      action: "ALLOW",
+      actionColor: "text-emerald-400",
+    };
+  };
+
+  const verdict = getTheatricalVerdict();
 
   return (
     <div className="w-full space-y-6">
@@ -150,56 +211,33 @@ export function TheatricalStage({
       {/* ACT 4: THE REVEAL — DRAMATIC TITLE CARD MOMENT */}
       {revealUnlocked && analysisResult && (
         <div
-          className={`relative rounded-3xl p-8 sm:p-10 border transition-all duration-700 backdrop-blur-2xl overflow-hidden ${
-            isThreat
-              ? "border-red-500/60 bg-gradient-to-b from-red-950/50 via-slate-950 to-slate-950 shadow-[0_0_60px_rgba(239,68,68,0.25)]"
-              : "border-emerald-500/50 bg-gradient-to-b from-emerald-950/40 via-slate-950 to-slate-950 shadow-[0_0_45px_rgba(16,185,129,0.18)]"
-          }`}
+          className={`relative rounded-3xl p-8 sm:p-10 border transition-all duration-700 backdrop-blur-2xl overflow-hidden ${verdict.cardBorder}`}
         >
           {/* Top glowing ambient highlight */}
-          <div
-            className={`absolute inset-x-0 top-0 h-1 ${
-              isThreat
-                ? "bg-gradient-to-r from-transparent via-red-500 to-transparent"
-                : "bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
-            }`}
-          />
+          <div className={`absolute inset-x-0 top-0 h-1 ${verdict.glowBar}`} />
 
           <div className="max-w-4xl mx-auto space-y-6 text-center">
             {/* Theatrical Subtitle Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-widest font-bold">
-              {isThreat ? (
-                <span className="text-red-400 bg-red-950/80 border border-red-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span className={`px-3 py-1 rounded-full flex items-center gap-1.5 border ${verdict.badgeStyle}`}>
+                {isThreat ? (
                   <ShieldAlert className="w-4 h-4 text-red-500 animate-pulse" />
-                  SECURITY INCIDENT TRIGGERED
-                </span>
-              ) : (
-                <span className="text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+                ) : isMismatch ? (
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                ) : (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  IDENTITY & AUTHENTICITY CONFIRMED
-                </span>
-              )}
+                )}
+                {verdict.badge}
+              </span>
             </div>
 
             {/* Huge Cinematic Title */}
             <div>
-              <h1
-                className={`text-3xl sm:text-5xl font-black font-mono tracking-tight uppercase ${
-                  isThreat ? "text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]" : "text-emerald-400"
-                }`}
-              >
-                {isClone
-                  ? "THREAT DETECTED: AI VOICE CLONE"
-                  : isReplay
-                  ? "THREAT DETECTED: REPLAY TRANSMISSION"
-                  : "CALL VERIFIED: AUTHENTIC HUMAN"}
+              <h1 className={`text-3xl sm:text-5xl font-black font-mono tracking-tight uppercase ${verdict.titleColor}`}>
+                {verdict.title}
               </h1>
               <p className="text-sm sm:text-base font-mono text-slate-300 mt-2 max-w-2xl mx-auto">
-                {isClone
-                  ? "The caller voice acoustically matches enrolled identity 'Primary User', but exhibits high synthetic deepfake probability with neural vocoder spectral artifacts."
-                  : isReplay
-                  ? "Replayed audio transmission detected through acoustic room reverberation and echo anomalies."
-                  : "Acoustic signature matches enrolled Primary User with organic wideband vocal harmonics."}
+                {verdict.desc}
               </p>
             </div>
 
@@ -229,7 +267,7 @@ export function TheatricalStage({
                 <div className="text-[11px] font-mono text-slate-400 uppercase">Authoritative Risk</div>
                 <div
                   className={`text-2xl font-mono font-bold tabular-nums ${
-                    isThreat ? "text-red-500" : "text-emerald-400"
+                    isThreat ? "text-red-500" : isMismatch ? "text-amber-400" : "text-emerald-400"
                   }`}
                 >
                   {analysisResult.risk.score}/100
@@ -239,12 +277,8 @@ export function TheatricalStage({
 
               <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
                 <div className="text-[11px] font-mono text-slate-400 uppercase">Security Action</div>
-                <div
-                  className={`text-2xl font-mono font-bold ${
-                    isClone ? "text-red-500" : isReplay ? "text-orange-400" : "text-emerald-400"
-                  }`}
-                >
-                  {isClone ? "TERMINATE" : isReplay ? "CHALLENGE" : "ALLOW"}
+                <div className={`text-2xl font-mono font-bold ${verdict.actionColor}`}>
+                  {verdict.action}
                 </div>
                 <div className="text-[10px] font-mono text-slate-500 mt-0.5">POLICY ENFORCED</div>
               </div>
