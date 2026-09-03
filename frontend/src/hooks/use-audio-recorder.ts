@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AudioValidationError, ValidatedAudio } from "@/types/audio";
 import { validateAudioBlob } from "@/lib/audio-validator";
+import { audioBufferToWav } from "@/lib/wav-encoder";
 
 export interface AudioRecorderState {
   isRecording: boolean;
@@ -93,20 +94,6 @@ export function useAudioRecorder() {
       analyserRef.current = analyser;
       setAnalyserNode(analyser);
 
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      const updateMeter = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        const avg = sum / dataArray.length;
-        setAudioLevel(Math.min(1, avg / 128));
-        animFrameRef.current = requestAnimationFrame(updateMeter);
-      };
-      updateMeter();
-
       // 4. Setup MediaRecorder with best supported mimeType
       const mimeTypes = [
         "audio/webm;codecs=opus",
@@ -146,7 +133,20 @@ export function useAudioRecorder() {
         setIsValidating(false);
 
         if (validation.success) {
-          setAudioData(validation.data);
+          // Re-package decoded AudioBuffer into canonical 16-bit PCM WAV blob
+          const pcmWavBlob = audioBufferToWav(validation.data.audioBuffer);
+          const wavUrl = URL.createObjectURL(pcmWavBlob);
+          const repackagedData = {
+            ...validation.data,
+            blob: pcmWavBlob,
+            url: wavUrl,
+            metadata: {
+              ...validation.data.metadata,
+              format: "AUDIO/WAV",
+              sizeBytes: pcmWavBlob.size,
+            },
+          };
+          setAudioData(repackagedData);
           setError(null);
         } else {
           setError(validation.error);

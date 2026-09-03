@@ -15,8 +15,14 @@ export function AudioPlayer({ audio, onReset }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+
     const el = audioRef.current;
     if (!el) return;
+
+    el.currentTime = 0;
+    el.pause();
 
     const handleTimeUpdate = () => {
       setCurrentTime(el.currentTime);
@@ -34,7 +40,7 @@ export function AudioPlayer({ audio, onReset }: AudioPlayerProps) {
       el.removeEventListener("timeupdate", handleTimeUpdate);
       el.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [audio.url, audio.id]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;

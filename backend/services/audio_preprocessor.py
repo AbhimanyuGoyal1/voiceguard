@@ -40,6 +40,13 @@ def decode_and_validate_audio(file_bytes: bytes, filename: str = "audio.wav") ->
         audio_io = io.BytesIO(file_bytes)
         data, orig_sr = sf.read(audio_io, dtype="float32", always_2d=True)
     except Exception as e:
+        err_msg = str(e).lower()
+        if file_bytes.startswith(b"\x1a\x45\xdf\xa3") or "webm" in filename.lower() or "matroska" in err_msg:
+            raise AudioProcessingError(
+                error_code="UNSUPPORTED_CONTAINER_WEBM",
+                message="WebM Opus audio container requires client-side PCM WAV transcoding.",
+                action_hint="Transcode audio to 16-bit linear PCM WAV before transmitting.",
+            )
         raise AudioProcessingError(
             error_code="UNSUPPORTED_FORMAT",
             message=f"Could not decode audio data: {str(e)}",

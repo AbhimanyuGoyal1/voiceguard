@@ -98,6 +98,7 @@ PR-17 — Complete — 2026-09-02: AI Security Analyst with strict <= 3.0s timeo
 PR-18 — Complete — 2026-09-02: Telephony Call / Conversation Simulator integrated into unified SOC pipeline.
 PR-19 — Complete — 2026-09-02: Error Handling & Resilience across all degradation states with automated test coverage.
 PR-20 — Complete — 2026-09-02: Golden Path Rehearsal & Final Polish. Complete system ready for production demonstration.
+PR-21 — Complete — 2026-09-03: UI/UX Refactor & Performance Optimization: Decoupled 60-120fps React state re-renders, in-browser 16-bit PCM WAV encoder, 95% STFT loop downsampling, Retina DPI canvas scaling, Semi-Circular SVG Radial HUD Gauge, 2-Column SOC Command Center layout with bottom Tabbed Intelligence Dock, Active Defense challenge modulation, SQLite incident audit persistence, and asyncio worker thread offloading.
 ```
 
 After completion:

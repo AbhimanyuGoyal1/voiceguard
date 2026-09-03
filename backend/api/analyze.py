@@ -1,10 +1,14 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
+import asyncio
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.schemas.analysis import AnalysisResult, ErrorResponse
 from backend.services.audio_preprocessor import decode_and_validate_audio, AudioProcessingError
 from backend.services.pipeline import build_analysis_pipeline_response
+from backend.database import get_db
+from backend.services.history_service import record_incident_analysis
 
 router = APIRouter(prefix="/api", tags=["Audio Analysis"])
 
@@ -21,6 +25,7 @@ async def analyze_audio(
     file: UploadFile = File(..., description="Audio file binary stream (WAV, MP3, OGG, WebM, FLAC)"),
     session_id: Optional[str] = Form(None, description="Optional client session ID"),
     enrolled_speaker_id: Optional[str] = Form("Primary User", description="Target enrolled identity for verification"),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Core audio analysis ingestion and preprocessing endpoint.
@@ -39,13 +44,23 @@ async def analyze_audio(
 
     try:
         file_bytes = await file.read()
-        processed_tensor, metadata = decode_and_validate_audio(file_bytes, filename=file.filename or "audio.wav")
-        result = build_analysis_pipeline_response(
+        processed_tensor, metadata = await asyncio.to_thread(
+            decode_and_validate_audio,
+            file_bytes,
+            filename=file.filename or "audio.wav",
+        )
+        result = await asyncio.to_thread(
+            build_analysis_pipeline_response,
             metadata=metadata,
             audio_tensor=processed_tensor,
             session_id=session_id,
             enrolled_speaker_id=enrolled_speaker_id or "Primary User",
         )
+        # Persist incident analysis to database
+        try:
+            await record_incident_analysis(db, result)
+        except Exception:
+            pass
         return result
 
     except AudioProcessingError as ape:

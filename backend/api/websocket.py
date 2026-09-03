@@ -7,6 +7,8 @@ from typing import Dict, Any
 
 from backend.services.audio_preprocessor import decode_and_validate_audio
 from backend.services.pipeline import build_analysis_pipeline_response
+from backend.database import AsyncSessionLocal
+from backend.services.history_service import record_incident_analysis
 
 ws_router = APIRouter(tags=["WebSocket"])
 
@@ -65,7 +67,11 @@ async def websocket_analysis_endpoint(websocket: WebSocket):
 
                 # 2. Preprocess
                 try:
-                    tensor, metadata = decode_and_validate_audio(raw_bytes, "ws_stream.wav")
+                    tensor, metadata = await asyncio.to_thread(
+                        decode_and_validate_audio,
+                        raw_bytes,
+                        "ws_stream.wav",
+                    )
 
                     # 3. Partial result: Speaker Verification
                     await websocket.send_json({
@@ -78,11 +84,19 @@ async def websocket_analysis_endpoint(websocket: WebSocket):
                     await asyncio.sleep(0.2)
 
                     # 4. Final Result with complete ML analysis
-                    final_result = build_analysis_pipeline_response(
+                    final_result = await asyncio.to_thread(
+                        build_analysis_pipeline_response,
                         metadata=metadata,
                         audio_tensor=tensor,
                         session_id=session_id,
                     )
+
+                    # Persist incident record
+                    try:
+                        async with AsyncSessionLocal() as db:
+                            await record_incident_analysis(db, final_result)
+                    except Exception:
+                        pass
 
                     await websocket.send_json({
                         "type": "FINAL_RESULT",

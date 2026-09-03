@@ -30,20 +30,20 @@ async def get_voice_fingerprint(
 
     if scenario_id == "ai_voice_clone":
         # Perturbed clone vector
-        np.random.seed(99)
-        current_emb = enrolled_emb + np.random.normal(0.15, 0.12, size=enrolled_emb.shape).astype(np.float32)
+        rng = np.random.default_rng(99)
+        current_emb = enrolled_emb + rng.normal(0.15, 0.12, size=enrolled_emb.shape).astype(np.float32)
         current_label = "AI Voice Clone (Current)"
         current_type = "synthetic"
     elif scenario_id == "unknown_speaker":
         # Impostor vector
-        np.random.seed(88)
-        current_emb = np.random.normal(0.5, 0.4, size=enrolled_emb.shape).astype(np.float32)
+        rng = np.random.default_rng(88)
+        current_emb = rng.normal(0.5, 0.4, size=enrolled_emb.shape).astype(np.float32)
         current_label = "Unknown Speaker (Current)"
         current_type = "impostor"
     elif scenario_id == "genuine_voice":
         # Genuine vector
-        np.random.seed(77)
-        current_emb = enrolled_emb + np.random.normal(0, 0.05, size=enrolled_emb.shape).astype(np.float32)
+        rng = np.random.default_rng(77)
+        current_emb = enrolled_emb + rng.normal(0, 0.05, size=enrolled_emb.shape).astype(np.float32)
         current_label = "Genuine Audio (Current)"
         current_type = "genuine"
 

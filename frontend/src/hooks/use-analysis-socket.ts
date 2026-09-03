@@ -26,20 +26,40 @@ export function useAnalysisSocket(wsUrl: string = "ws://localhost:8000/ws/analyz
 
   const socketRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef<number>(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isUnmountingRef = useRef<boolean>(false);
   const maxRetries = 5;
 
+  const connectRef = useRef<() => void>(() => {});
+
   const connect = useCallback(() => {
+    if (isUnmountingRef.current) return;
+
+    // Clean up existing socket if any before recreating
+    if (socketRef.current) {
+      socketRef.current.onopen = null;
+      socketRef.current.onmessage = null;
+      socketRef.current.onclose = null;
+      socketRef.current.onerror = null;
+      if (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING) {
+        socketRef.current.close();
+      }
+      socketRef.current = null;
+    }
+
     try {
       const ws = new WebSocket(wsUrl);
       socketRef.current = ws;
 
       ws.onopen = () => {
+        if (isUnmountingRef.current) return;
         setIsConnected(true);
         setIsReconnecting(false);
         retryCountRef.current = 0;
       };
 
       ws.onmessage = (event) => {
+        if (isUnmountingRef.current) return;
         try {
           const payload = JSON.parse(event.data);
           if (payload.type === "STATE_CHANGE") {
@@ -61,31 +81,64 @@ export function useAnalysisSocket(wsUrl: string = "ws://localhost:8000/ws/analyz
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        if (isUnmountingRef.current) return;
         setIsConnected(false);
+
+        // Don't retry if clean close
+        if (event.wasClean) {
+          setIsReconnecting(false);
+          return;
+        }
+
         // Exponential backoff reconnect
         if (retryCountRef.current < maxRetries) {
           setIsReconnecting(true);
           const backoff = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000);
           retryCountRef.current += 1;
-          setTimeout(connect, backoff);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (!isUnmountingRef.current) {
+              connectRef.current();
+            }
+          }, backoff);
         } else {
           setIsReconnecting(false);
         }
       };
 
       ws.onerror = () => {
-        ws.close();
+        if (isUnmountingRef.current) return;
+        try {
+          ws.close();
+        } catch {
+          // ignore
+        }
       };
     } catch {
-      setIsConnected(false);
+      if (!isUnmountingRef.current) {
+        setIsConnected(false);
+      }
     }
   }, [wsUrl]);
 
   useEffect(() => {
+    connectRef.current = connect;
+    isUnmountingRef.current = false;
     connect();
     return () => {
-      socketRef.current?.close();
+      isUnmountingRef.current = true;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (socketRef.current) {
+        socketRef.current.onopen = null;
+        socketRef.current.onmessage = null;
+        socketRef.current.onclose = null;
+        socketRef.current.onerror = null;
+        socketRef.current.close();
+        socketRef.current = null;
+      }
     };
   }, [connect]);
 
@@ -134,9 +187,9 @@ export function useAnalysisSocket(wsUrl: string = "ws://localhost:8000/ws/analyz
       setAnalysisState(result.state);
       setActiveStage(null);
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAnalysisState("ERROR");
-      setErrorMessage(err.message || "Failed to reach backend analysis service");
+      setErrorMessage(err instanceof Error ? err.message : "Failed to reach backend analysis service");
       return null;
     }
   }, []);

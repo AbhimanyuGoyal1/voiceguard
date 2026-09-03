@@ -18,8 +18,8 @@ def project_embeddings_pca_2d(
       - AI Cloned / Synthetic Samples (perturbed offset)
       - Current Analyzed Audio Vector
     """
-    # Deterministic reference cluster fixtures based on 192-d ECAPA embeddings
-    np.random.seed(42)
+    # Deterministic reference cluster fixtures based on 192-d ECAPA embeddings (thread-safe RNG)
+    rng = np.random.default_rng(42)
 
     # 1. Base reference points: Enrolled profile
     enrolled_192 = np.asarray(enrolled_emb, dtype=np.float32).flatten()
@@ -33,7 +33,7 @@ def project_embeddings_pca_2d(
 
     # Genuine samples (low perturbation: 0.05 - 0.12)
     for i in range(4):
-        noise = np.random.normal(0, 0.08, size=enrolled_192.shape).astype(np.float32)
+        noise = rng.normal(0, 0.08, size=enrolled_192.shape).astype(np.float32)
         gen = enrolled_192 + noise
         gen = gen / np.linalg.norm(gen)
         points_raw.append(gen)
@@ -41,7 +41,7 @@ def project_embeddings_pca_2d(
 
     # Synthetic clone samples (directed spectral perturbation: 0.18 - 0.25)
     for i in range(3):
-        noise = np.random.normal(0.12, 0.15, size=enrolled_192.shape).astype(np.float32)
+        noise = rng.normal(0.12, 0.15, size=enrolled_192.shape).astype(np.float32)
         synth = enrolled_192 + noise
         synth = synth / np.linalg.norm(synth)
         points_raw.append(synth)
@@ -49,7 +49,7 @@ def project_embeddings_pca_2d(
 
     # Impostor samples (orthogonal / distant: 0.7 - 0.9)
     for i in range(3):
-        noise = np.random.normal(0.6, 0.4, size=enrolled_192.shape).astype(np.float32)
+        noise = rng.normal(0.6, 0.4, size=enrolled_192.shape).astype(np.float32)
         imp = noise / np.linalg.norm(noise)
         points_raw.append(imp)
         meta.append({"label": f"Unknown Impostor {i+1}", "type": "impostor", "identity": "Stranger Profile"})
