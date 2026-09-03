@@ -35,23 +35,66 @@ def decode_and_validate_audio(file_bytes: bytes, filename: str = "audio.wav") ->
             action_hint="Check your recording or select a valid audio file.",
         )
 
-    # Decode audio using soundfile (supports WAV, FLAC, OGG, etc.)
+    # Decode audio using soundfile (supports WAV, FLAC, OGG, MP3, etc.) with resilient stream trimming and PyAV fallback
     try:
         audio_io = io.BytesIO(file_bytes)
         data, orig_sr = sf.read(audio_io, dtype="float32", always_2d=True)
-    except Exception as e:
-        err_msg = str(e).lower()
-        if file_bytes.startswith(b"\x1a\x45\xdf\xa3") or "webm" in filename.lower() or "matroska" in err_msg:
+    except Exception as sf_err:
+        # Resilient recovery for container mismatches / trailing metadata (Loophole L-07)
+        recovered = False
+        # If file has trailing OEM metadata (e.g. oppoMark or comma-separated waveform peak arrays)
+        trim_candidates = []
+        for marker in [b'oppoMark', b'//oppoMark']:
+            pos = file_bytes.find(marker)
+            if pos != -1 and pos > 1000:
+                trim_candidates.append(pos)
+        
+        # Regex search for trailing comma-separated waveform numbers (e.g. 0,0,3,1040,...)
+        import re
+        num_match = re.search(rb'\d+,\d+,\d+,\d+', file_bytes)
+        if num_match and num_match.start() > 1000:
+            trim_candidates.append(num_match.start())
+
+        for cut in sorted(set(trim_candidates)):
+            try:
+                data, orig_sr = sf.read(io.BytesIO(file_bytes[:cut]), dtype="float32", always_2d=True)
+                recovered = True
+                break
+            except Exception:
+                continue
+
+        if not recovered:
+            try:
+                import av
+                container = av.open(io.BytesIO(file_bytes))
+                frames = []
+                try:
+                    for frame in container.decode(audio=0):
+                        frames.append(frame.to_ndarray())
+                except Exception:
+                    # Retain all successfully decoded frames if trailing stream metadata triggers an error
+                    pass
+
+                if not frames:
+                    raise ValueError("No audio frames found in stream")
+                raw_data = np.concatenate(frames, axis=1)
+                orig_sr = container.streams.audio[0].rate
+                data = raw_data.T.astype(np.float32)
+                peak = float(np.max(np.abs(data))) if data.size > 0 else 0.0
+                if peak > 2.0:
+                    data = data / 32768.0
+                elif peak > 1.0:
+                    data = data / peak
+                recovered = True
+            except Exception:
+                pass
+
+        if not recovered:
             raise AudioProcessingError(
-                error_code="UNSUPPORTED_CONTAINER_WEBM",
-                message="WebM Opus audio container requires client-side PCM WAV transcoding.",
-                action_hint="Transcode audio to 16-bit linear PCM WAV before transmitting.",
+                error_code="UNSUPPORTED_FORMAT",
+                message=f"Could not decode audio data: {str(sf_err)}",
+                action_hint="Ensure audio is an uncorrupted WAV, WebM, OGG, MP3, AAC, or FLAC file.",
             )
-        raise AudioProcessingError(
-            error_code="UNSUPPORTED_FORMAT",
-            message=f"Could not decode audio data: {str(e)}",
-            action_hint="Ensure audio is an uncorrupted WAV, OGG, MP3, or FLAC file.",
-        )
 
     # 1. Convert to Mono (average channels if multi-channel)
     if data.shape[1] > 1:

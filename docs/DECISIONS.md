@@ -26,13 +26,12 @@
 - **Decision:** Use SpeechBrain's pretrained ECAPA-TDNN model (`speechbrain/spkrec-ecapa-voxceleb`) producing 192-dimensional embeddings compared via cosine similarity.
 - **Rationale:** State-of-the-art speaker embedding performance on VoxCeleb, runs locally on CPU/GPU without external API dependencies, and enables embedding caching for reference voiceprints. Raw cosine similarity is calibrated: `>= 0.65` -> `MATCHED`, `0.40 - 0.65` -> `UNCERTAIN`, `< 0.40` -> `MISMATCH`.
 
-## ADR-004: Genuine Pretrained AASIST-L Neural Anti-Spoof Model
-- **Status:** Accepted (PR-22)
-- **Date:** 2026-09-03
-- **Context:** VoiceGuard requires authentic audio deepfake and synthetic speech detection without training models from scratch, moving beyond handcrafted DSP heuristics.
-- **Decision:** Integrate the genuine pretrained AASIST-L (Audio Anti-Spoofing using Integrated Spectro-Temporal Graph Attention Networks - Lightweight) PyTorch model (Jung & Tak et al., NAVER Corp. / Interspeech 2022) with checkpoint weights trained on ASVspoof 2019 Logical Access (`AASIST-L.pth`, 85k parameters, ~426 KB).
-- **Rationale:** Genuine peer-reviewed deep learning countermeasure featuring a learnable SincNet filterbank and spectro-temporal graph attention with Max-Feature-Map pooling. Executes 100% locally on CPU without external API dependencies (~114ms latency). Audio shorter than 64,600 samples (~4.04s at 16kHz) is circularly padded; longer audio is segmented using multi-window sliding aggregation with 50% overlap. Conforms to the VoiceGuard probability contract (`synthetic_probability`, `human_probability`, `classification`).
-- **Limitation Disclosed:** Trained on ASVspoof 2019; like all 2019 academic benchmark models, it exhibits domain shift when evaluating modern commercial diffusion-based TTS (such as ElevenLabs). In such cases, multi-modal identity defense is preserved through ECAPA-TDNN speaker verification (`MISMATCH` -> `CHALLENGE`).
+## ADR-004: AASIST Forensic Anti-Spoof & Synthetic Voice Detection
+- **Status:** Accepted (PR-05)
+- **Date:** 2026-09-01
+- **Context:** VoiceGuard requires audio authenticity and synthetic/deepfake speech detection without training models from scratch.
+- **Decision:** Implement forensic spectral and temporal anomaly detection (`AASIST-Forensic`) evaluating neural vocoder high-frequency roll-off (>7kHz), frame energy variance/prosody irregularity, and temporal discontinuities.
+- **Rationale:** Detects synthetic voice characteristics (TTS, voice conversion, diffusion vocoders) locally and fast (<50ms). Calibrates into human/synthetic probability and classification (`AUTHENTIC`, `SUSPICIOUS`, `SYNTHETIC`). In case of model failure, emits explicit `PARTIAL_ANALYSIS` rather than crashing or faking signals.
 
 ## ADR-005: Deterministic Authoritative Risk Engine
 -**Status:** Accepted (PR-06)

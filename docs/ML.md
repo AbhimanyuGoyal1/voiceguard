@@ -195,29 +195,26 @@ These values must not be invented before model evaluation.
 
 # 8. Anti-Spoof / Deepfake Detection
 
-VoiceGuard uses a genuine, pretrained deep learning anti-spoofing model capable of distinguishing genuine speech from synthetic/manipulated speech.
+VoiceGuard requires a pretrained anti-spoofing model capable of distinguishing genuine speech from synthetic/manipulated speech.
 
-### Primary Model: AASIST-L (Integrated Spectro-Temporal Graph Attention Networks - Lightweight)
-* **Checkpoint:** `AASIST-L.pth` (85k parameters, ~426 KB PyTorch weights).
-* **Source:** Official repository `clovaai/aasist` (Jung & Tak et al., NAVER Corp. / Interspeech 2022).
-* **License:** MIT License.
-* **Architecture:**
-  - Front-end: Learnable SincNet filterbank (70 filters) operating directly on raw 16kHz audio waveforms.
-  - Intermediate: Stacked residual convolution blocks with Max-Feature-Map (MFM) activations.
-  - Back-end: Graph Attention Network (GAT) pooling spectral and temporal graph representations into master node vectors.
-  - Output: 2 unnormalized logits `[spoof, bona-fide]`.
-* **Input Windowing & Preprocessing:**
-  - Standard sample rate: 16,000 Hz single-channel mono.
-  - Fixed window size: 64,600 samples (~4.0375 seconds).
-  - Short audio (< 64,600 samples): Circular repetition / tiling (conforming to official AASIST evaluation protocol).
-  - Long audio (>= 64,600 samples): Multi-window sliding aggregation with 50% hop, averaging softmax probabilities across windows.
-* **Output Interpretation:**
-  - Raw logits passed through Softmax: `probs[0]` corresponds to synthetic spoof probability, `probs[1]` to bona-fide human probability.
-* **Domain Limitations & Truth in Advertising:**
-  - Trained on ASVspoof 2019 Logical Access (LA).
-  - Detects 2019-era neural vocoders, concatenative/statistical TTS, and voice conversion with high accuracy (EER ~1.13%).
-  - Modern commercial diffusion/flow-matching models (e.g., ElevenLabs) exhibit domain shift, as demonstrated by academic literature (25-42% EER in-the-wild).
-  - The system relies on multi-modal defense: caller identity verification via ECAPA-TDNN prevents unauthorized voice access (`MISMATCH` -> `CHALLENGE`) even when vocoder artifacts evade the anti-spoof model.
+Candidate model families include:
+
+* AASIST
+* RawNet2
+* another suitable pretrained ASVspoof model
+
+The final model must be selected based on:
+
+* pretrained checkpoint availability
+* compatibility with our Python environment
+* inference speed
+* ease of integration
+* model size
+* suitability for synthetic speech detection
+* licensing
+* hackathon reliability
+
+The final selection must be recorded in `DECISIONS.md`.
 
 ---
 
