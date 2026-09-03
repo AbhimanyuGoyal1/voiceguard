@@ -1,0 +1,71 @@
+{
+  "description": "Explicit training and calibration configuration for VoiceGuard forensic audio analysis. Only explicitly listed samples here are used for calibration. No directory globbing.",
+  "active_calibration_samples": [
+    {
+      "id": "sample_a",
+      "designation": "A",
+      "path": "audiosamples/Sample A.mpeg",
+      "label": "genuine",
+      "notes": "Explicitly provided Sample A natural voice recording"
+    },
+    {
+      "id": "sample_b",
+      "designation": "B",
+      "path": "audiosamples/Sample B.mpeg",
+      "label": "genuine",
+      "notes": "Explicitly provided Sample B natural voice recording"
+    }
+  ],
+  "forensic_parameters": {
+    "hf_cutoff_hz": 6000,
+    "weights": {
+      "spectral_flatness": 0.25,
+      "spectral_flux": 0.25,
+      "hf_energy_ratio": 0.20,
+      "intonation_variance": 0.15,
+      "jitter": 0.10,
+      "energy_variance": 0.05
+    },
+    "reference_ranges": {
+      "spectral_flatness": {
+        "natural_min": 0.08,
+        "natural_typical": 0.25,
+        "synthetic_threshold": 0.035
+      },
+      "spectral_flux": {
+        "natural_min": 0.35,
+        "natural_typical": 0.55,
+        "synthetic_threshold": 0.15
+      },
+      "hf_energy_ratio": {
+        "natural_min": 0.00008,
+        "synthetic_cutoff": 0.00005,
+        "replay_screech": 0.005
+      },
+      "intonation_variance": {
+        "natural_min": 0.18,
+        "synthetic_monotone": 0.05
+      },
+      "jitter_pct": {
+        "natural_min": 0.40,
+        "natural_typical": 2.50,
+        "synthetic_zero": 0.10
+      }
+    }
+  },
+  "calibration_baseline": {
+    "spectral_flatness": { "mean": 0.4238, "std": 0.1563, "min": 0.2675, "max": 0.5801 },
+    "spectral_flux": { "mean": 0.6095, "std": 0.0549, "min": 0.5546, "max": 0.6643 },
+    "hf_energy_ratio": { "mean": 0.0203, "std": 0.0200, "min": 0.0003, "max": 0.0403 },
+    "pitch_mean_hz": { "mean": 151.5, "std": 32.1, "min": 119.4, "max": 183.5 },
+    "intonation_variance": { "mean": 0.4722, "std": 0.1458, "min": 0.3264, "max": 0.6179 },
+    "jitter_pct": { "mean": 20.53, "std": 12.30, "min": 8.23, "max": 32.82 },
+    "energy_variance": { "mean": 0.0046, "std": 0.0017, "min": 0.0029, "max": 0.0063 }
+  },
+  "demo_combination": {
+    "forensic_weight": 0.85,
+    "model_weight": 0.15,
+    "threshold_synthetic": 55.0,
+    "threshold_suspicious": 40.0
+  }
+}

@@ -200,7 +200,7 @@ export function AudioCapture({ onAudioCaptured }: AudioCaptureProps) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="audio/*,.wav,.mp3,.webm,.ogg,.flac"
+              accept="audio/*,.wav,.mp3,.webm,.ogg,.flac,.opus,.m4a,.aac"
               className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {

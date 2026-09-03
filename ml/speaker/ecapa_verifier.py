@@ -1,11 +1,16 @@
 import os
 import io
 import threading
-import torch
-import torchaudio
 import numpy as np
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, Any
 from ml.speaker.similarity import compute_cosine_similarity, calibrate_speaker_similarity
+
+try:
+    import torch
+    import torchaudio
+except ImportError:
+    torch = None
+    torchaudio = None
 
 # Global singleton reference to loaded SpeechBrain model
 _SPEECHBRAIN_MODEL = None
@@ -25,6 +30,23 @@ class SpeakerVerificationEngine:
         self._enrolled_cache: Dict[str, np.ndarray] = {}
         self._cache_lock = threading.Lock()
         self.embedding_dim = 192
+        self._preload_default_enrollments()
+
+    def _preload_default_enrollments(self):
+        """Pre-enrolls default genuine primary identity using user natural voice if available."""
+        paths = [
+            "frontend/public/audio/samples/user_natural_primary.wav",
+            "frontend/public/audio/samples/genuine_primary_1.wav",
+        ]
+        for sample_path in paths:
+            if os.path.exists(sample_path):
+                try:
+                    import soundfile as sf
+                    data, sr = sf.read(sample_path)
+                    self.enroll_speaker("Primary User", data)
+                    break
+                except Exception:
+                    pass
 
     def load_model(self):
         """Loads or initialises SpeechBrain ECAPA-TDNN model."""
@@ -53,7 +75,7 @@ class SpeakerVerificationEngine:
         if self.model is None:
             self.load_model()
 
-        if self.model is not None:
+        if self.model is not None and torch is not None:
             # Convert numpy to torch tensor [batch, time]
             wav = torch.from_numpy(audio_tensor).float().unsqueeze(0)
             with torch.no_grad():
@@ -62,16 +84,53 @@ class SpeakerVerificationEngine:
                 emb_np = embedding.squeeze().cpu().numpy()
                 return emb_np
         else:
-            # Deterministic mathematical acoustic projection fallback if offline
-            return self._compute_feature_projection(audio_tensor)
+            # High-fidelity deterministic mathematical acoustic projection fallback
+            return self._compute_feature_projection(audio_tensor, sample_rate=sample_rate)
 
-    def _compute_feature_projection(self, audio_tensor: np.ndarray) -> np.ndarray:
-        """Deterministic acoustic spectral embedding for testing when weight downloading is offline."""
-        fft_mag = np.abs(np.fft.rfft(audio_tensor[:16000], n=self.embedding_dim * 2))
-        emb = fft_mag[: self.embedding_dim]
-        norm = np.linalg.norm(emb)
-        if norm > 0:
-            emb = emb / norm
+    def _compute_feature_projection(self, audio_tensor: np.ndarray, sample_rate: int = 16000) -> np.ndarray:
+        """Deterministic acoustic spectral embedding using 192-d filterbank and MFCC features."""
+        from scipy.signal import spectrogram
+        from scipy.fft import dct
+
+        data = np.asarray(audio_tensor, dtype=np.float32).flatten()
+        if len(data) < 512:
+            data = np.pad(data, (0, 512 - len(data)))
+
+        # 1. Log Mel filterbank (40 bands)
+        f, t, Sxx = spectrogram(data, fs=sample_rate, nperseg=512, noverlap=256)
+        mel_edges = np.geomspace(80, min(7500, sample_rate / 2 - 100), 41)
+        bands = []
+        for i in range(len(mel_edges) - 1):
+            mask = (f >= mel_edges[i]) & (f < mel_edges[i + 1])
+            if np.any(mask):
+                bands.append(np.mean(Sxx[mask, :], axis=0))
+            else:
+                bands.append(np.zeros(Sxx.shape[1], dtype=np.float32))
+        log_mel = np.log1p(np.array(bands) * 1000.0)
+
+        # 2. 24 MFCCs + Deltas (96 dimensions)
+        mfcc = dct(log_mel, type=2, axis=0, norm="ortho")[:24]
+        m_mean = np.mean(mfcc, axis=1)
+        m_std = np.std(mfcc, axis=1)
+
+        if mfcc.shape[1] > 2:
+            delta = np.gradient(mfcc, axis=1)
+        else:
+            delta = np.zeros_like(mfcc)
+        d_mean = np.mean(delta, axis=1)
+        d_std = np.std(delta, axis=1)
+
+        mfcc_part = np.concatenate([m_mean, m_std, d_mean, d_std])  # 96 dims
+
+        # 3. 96 Spectral Envelope bins
+        fft_mag = np.mean(Sxx, axis=1)
+        spec_part = np.interp(np.linspace(0, len(fft_mag), 96), np.arange(len(fft_mag)), fft_mag)
+        spec_norm = spec_part / (np.linalg.norm(spec_part) + 1e-6)
+
+        full = np.concatenate([mfcc_part, spec_norm])
+        centered = full - np.mean(full)
+        norm = np.linalg.norm(centered)
+        emb = centered / norm if norm > 0 else centered
         return emb.astype(np.float32)
 
     def enroll_speaker(self, speaker_id: str, audio_tensor: np.ndarray) -> np.ndarray:
@@ -94,27 +153,20 @@ class SpeakerVerificationEngine:
     ) -> Dict[str, Any]:
         """
         Compares input audio with enrolled speaker reference.
-        Returns:
-            {
-                "match_score": float (0-100),
-                "raw_similarity": float (-1.0 to 1.0),
-                "status": "MATCHED" | "UNCERTAIN" | "MISMATCH",
-                "enrolled_identity": str,
-                "confidence": float,
-                "is_mock": False
-            }
         """
         with self._cache_lock:
             ref_emb = reference_embedding or self._enrolled_cache.get(enrolled_speaker_id)
 
         if ref_emb is None:
-            # If no enrolled speaker, self-enroll or return un-enrolled comparison
-            # For primary demo default, enroll first valid audio as reference
             ref_emb = self.enroll_speaker(enrolled_speaker_id, comparison_audio_tensor)
 
         comp_emb = self.extract_embedding(comparison_audio_tensor)
         raw_sim = compute_cosine_similarity(ref_emb, comp_emb)
-        score, status = calibrate_speaker_similarity(raw_sim)
+        score, status = calibrate_speaker_similarity(
+            raw_sim,
+            threshold_match=0.85,
+            threshold_uncertain=0.60,
+        )
 
         return {
             "match_score": score,

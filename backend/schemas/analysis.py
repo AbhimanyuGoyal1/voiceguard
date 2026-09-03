@@ -16,7 +16,7 @@ AnalysisState = Literal[
 
 ThreatSeverity = Literal["LOW", "MODERATE", "HIGH", "CRITICAL"]
 AuthenticityClassification = Literal["AUTHENTIC", "SYNTHETIC", "SUSPICIOUS", "UNKNOWN"]
-SpeakerMatchStatus = Literal["MATCHED", "MISMATCH", "UNKNOWN", "NOT_ENROLLED"]
+SpeakerMatchStatus = Literal["MATCHED", "MISMATCH", "UNCERTAIN", "UNKNOWN", "NOT_ENROLLED"]
 
 
 class AudioPreprocessingInfo(BaseModel):
@@ -52,6 +52,9 @@ class EvidenceSignal(BaseModel):
     temporal_artifacts: float = Field(0.0, description="Boundary/splicing temporal artifacts (0-100)")
     speaker_similarity: float = Field(..., description="Speaker match score")
     summary: str = Field(..., description="Forensic human-readable evidence summary")
+    forensic_score: Optional[float] = Field(None, description="Acoustic forensic anomaly composite score (0-100)")
+    forensic_features: Optional[dict] = Field(None, description="Detailed multi-parameter forensic measurements")
+    model_score: Optional[float] = Field(None, description="Raw model synthetic score (0-100)")
     is_mock: bool = Field(True, description="True while ML model integration is in progress")
 
 

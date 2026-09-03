@@ -10,7 +10,7 @@ export type AnalysisState =
 
 export type ThreatSeverity = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
 export type AuthenticityClassification = "AUTHENTIC" | "SYNTHETIC" | "SUSPICIOUS" | "UNKNOWN";
-export type SpeakerMatchStatus = "MATCHED" | "MISMATCH" | "UNKNOWN" | "NOT_ENROLLED";
+export type SpeakerMatchStatus = "MATCHED" | "MISMATCH" | "UNCERTAIN" | "UNKNOWN" | "NOT_ENROLLED";
 
 export interface AudioPreprocessingInfo {
   duration_seconds: number;

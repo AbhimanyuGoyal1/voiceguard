@@ -83,7 +83,9 @@ def build_analysis_pipeline_response(
                     confidence=1.0,
                     is_mock=True,
                 )
-        except Exception:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             is_degraded = True
             is_speaker_ok = False
             unavailable_signals.append("speaker_verification")
@@ -181,6 +183,9 @@ def build_analysis_pipeline_response(
         pitch_irregularity=anti_evidence["pitch_irregularity"],
         temporal_artifacts=anti_evidence["temporal_artifacts"],
         speaker_similarity=speaker.match_score,
+        forensic_score=as_result.get("forensic_score") if "as_result" in locals() and isinstance(as_result, dict) else None,
+        forensic_features=as_result.get("forensic_features") if "as_result" in locals() and isinstance(as_result, dict) else None,
+        model_score=as_result.get("model_score") if "as_result" in locals() and isinstance(as_result, dict) else None,
         summary=(
             f"Speaker: {speaker.status} ({speaker.match_score}%), Authenticity: {authenticity.classification} "
             f"({authenticity.synthetic_probability}% synthetic)."
