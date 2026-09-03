@@ -76,7 +76,11 @@ def run_explicit_calibration(
     ]
 
     for k in metric_keys:
-        vals = [r["features"][k] for r in calibration_records if r["features"].get("reliability", {}).get(k, True)]
+        vals = [
+            r["features"][k]
+            for r in calibration_records
+            if r.get("label") == "genuine" and r["features"].get("reliability", {}).get(k, True)
+        ]
         if vals:
             stats[k] = {
                 "mean": round(float(np.mean(vals)), 5),

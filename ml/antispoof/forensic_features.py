@@ -183,9 +183,12 @@ def extract_forensic_features(
     synth_thresh_flux = ranges.get("spectral_flux", {}).get("synthetic_threshold", 0.15)
     synth_thresh_hf = ranges.get("hf_energy_ratio", {}).get("synthetic_cutoff", 0.00005)
 
-    # Flatness anomaly: high when flatness is unnaturally low (<0.035)
+    # Flatness anomaly: high when flatness is unnaturally low (<0.035, vocoder cutoff)
+    # OR unnaturally high (>0.48, neural vocoder diffusion/hiss artifacts)
     if spectral_flatness < synth_thresh_flatness:
         score_flatness = min(100.0, max(0.0, (synth_thresh_flatness - spectral_flatness) / synth_thresh_flatness * 100.0))
+    elif spectral_flatness > 0.48:
+        score_flatness = min(95.0, 75.0 + (spectral_flatness - 0.48) * 150.0)
     else:
         score_flatness = 0.0
 
@@ -195,11 +198,11 @@ def extract_forensic_features(
     else:
         score_flux = 0.0
 
-    # HF cutoff anomaly: vocoder brick-wall drop (< 0.00005)
+    # HF cutoff anomaly: vocoder brick-wall drop (< 0.00005) OR replay/conversion screech (> 0.005)
     if hf_energy < synth_thresh_hf:
-        score_hf = min(100.0, max(0.0, (synth_thresh_hf - hf_energy) / synth_thresh_hf * 100.0))
+        score_hf = 88.0  # Vocoder brick-wall cutoff: frequencies above 6kHz completely missing
     elif hf_energy > ranges.get("hf_energy_ratio", {}).get("replay_screech", 0.005):
-        score_hf = 85.0  # Loudspeaker acoustic replay screech
+        score_hf = min(98.0, 80.0 + (hf_energy - 0.005) * 400.0)
     else:
         score_hf = 0.0
 
@@ -208,12 +211,18 @@ def extract_forensic_features(
         synth_monotone = ranges.get("intonation_variance", {}).get("synthetic_monotone", 0.05)
         if intonation_var < synth_monotone:
             score_intonation = min(100.0, (synth_monotone - intonation_var) / synth_monotone * 100.0)
+        elif pitch_std_hz > 75.0:
+            # Neural voice conversion pitch tracking instability / octave jumping
+            score_intonation = 80.0
         else:
             score_intonation = 0.0
 
         synth_jitter_zero = ranges.get("jitter_pct", {}).get("synthetic_zero", 0.10)
         if jitter_pct < synth_jitter_zero:
             score_jitter = 80.0
+        elif jitter_pct > 22.0:
+            # Neural voice conversion synthesis flutter
+            score_jitter = min(95.0, 75.0 + (jitter_pct - 22.0) * 1.5)
         else:
             score_jitter = 0.0
     else:

@@ -12,8 +12,8 @@
       "id": "sample_b",
       "designation": "B",
       "path": "audiosamples/Sample B.mpeg",
-      "label": "genuine",
-      "notes": "Explicitly provided Sample B natural voice recording"
+      "label": "synthetic",
+      "notes": "Explicitly provided Sample B AI-converted voice clone sample"
     }
   ],
   "forensic_parameters": {
