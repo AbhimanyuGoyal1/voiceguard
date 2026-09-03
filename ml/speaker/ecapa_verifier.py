@@ -1,5 +1,6 @@
 import os
 import io
+import threading
 import torch
 import torchaudio
 import numpy as np
@@ -22,6 +23,7 @@ class SpeakerVerificationEngine:
         self.save_dir = save_dir
         self.model = None
         self._enrolled_cache: Dict[str, np.ndarray] = {}
+        self._cache_lock = threading.Lock()
         self.embedding_dim = 192
 
     def load_model(self):
@@ -75,12 +77,14 @@ class SpeakerVerificationEngine:
     def enroll_speaker(self, speaker_id: str, audio_tensor: np.ndarray) -> np.ndarray:
         """Enrolls a speaker and caches the reference embedding."""
         emb = self.extract_embedding(audio_tensor)
-        self._enrolled_cache[speaker_id] = emb
+        with self._cache_lock:
+            self._enrolled_cache[speaker_id] = emb
         return emb
 
     def get_enrolled_embedding(self, speaker_id: str) -> Optional[np.ndarray]:
         """Retrieves cached enrolled embedding."""
-        return self._enrolled_cache.get(speaker_id)
+        with self._cache_lock:
+            return self._enrolled_cache.get(speaker_id)
 
     def verify_speaker(
         self,
@@ -100,7 +104,8 @@ class SpeakerVerificationEngine:
                 "is_mock": False
             }
         """
-        ref_emb = reference_embedding or self._enrolled_cache.get(enrolled_speaker_id)
+        with self._cache_lock:
+            ref_emb = reference_embedding or self._enrolled_cache.get(enrolled_speaker_id)
 
         if ref_emb is None:
             # If no enrolled speaker, self-enroll or return un-enrolled comparison

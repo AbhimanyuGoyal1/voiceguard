@@ -1,7 +1,7 @@
 "use client";
 
 import { SpeakerVerificationSignal } from "@/types/analysis";
-import { UserCheck, UserX, UserSearch } from "lucide-react";
+import { UserCheck, UserX, UserSearch, Fingerprint } from "lucide-react";
 
 interface SpeakerCardProps {
   speaker: SpeakerVerificationSignal | null;
@@ -17,27 +17,35 @@ export function SpeakerCard({ speaker, isAnalyzing }: SpeakerCardProps) {
     switch (status) {
       case "MATCHED":
         return {
-          icon: <UserCheck className="w-5 h-5 text-emerald-400" />,
+          icon: <UserCheck className="w-4 h-4 text-emerald-400" />,
           label: "MATCHED",
           color: "text-emerald-400 bg-emerald-950/40 border-emerald-500/30",
+          barColor: "bg-emerald-400",
+          glow: "border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]",
         };
       case "MISMATCH":
         return {
-          icon: <UserX className="w-5 h-5 text-red-400" />,
+          icon: <UserX className="w-4 h-4 text-red-400" />,
           label: "MISMATCH",
           color: "text-red-400 bg-red-950/40 border-red-500/30",
+          barColor: "bg-red-500",
+          glow: "border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]",
         };
       case "NOT_ENROLLED":
         return {
-          icon: <UserSearch className="w-5 h-5 text-slate-400" />,
+          icon: <UserSearch className="w-4 h-4 text-slate-400" />,
           label: "AUTO-ENROLLED",
           color: "text-slate-400 bg-slate-800/40 border-slate-700/30",
+          barColor: "bg-slate-500",
+          glow: "border-white/10",
         };
       default:
         return {
-          icon: <UserSearch className="w-5 h-5 text-yellow-400" />,
+          icon: <UserSearch className="w-4 h-4 text-yellow-400" />,
           label: "UNCERTAIN",
           color: "text-yellow-400 bg-yellow-950/40 border-yellow-500/30",
+          barColor: "bg-yellow-500",
+          glow: "border-yellow-500/20 shadow-[0_0_20px_rgba(234,179,8,0.1)]",
         };
     }
   };
@@ -45,40 +53,47 @@ export function SpeakerCard({ speaker, isAnalyzing }: SpeakerCardProps) {
   const badge = getStatusBadge();
 
   return (
-    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-sm">
+    <div className={`p-5 rounded-2xl border bg-[#0A0F1D]/90 backdrop-blur-md transition-all duration-300 ${badge.glow}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {badge.icon}
-          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400">
-            Speaker Verification (ECAPA-TDNN)
+          <Fingerprint className="w-4 h-4 text-cyan-400" />
+          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold">
+            Speaker Verification
           </h4>
         </div>
         <span
-          className={`text-xs font-mono font-semibold px-2 py-0.5 rounded border ${badge.color}`}
+          className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badge.color}`}
         >
+          {badge.icon}
           {isAnalyzing ? "EXTRACTING..." : badge.label}
         </span>
       </div>
 
-      <div className="flex items-baseline justify-between mt-2">
-        <div>
-          <div className="text-xs text-slate-500 font-mono">Enrolled Identity</div>
-          <div className="text-sm font-semibold text-slate-200">{identity}</div>
-        </div>
-
-        <div className="text-right">
-          <div className="text-2xl font-bold font-mono text-cyan-400">
-            {isAnalyzing ? "--" : `${matchScore}%`}
+      <div className="space-y-3 mt-3">
+        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+          <div className="flex justify-between text-xs font-mono">
+            <span className="text-slate-400">Target Identity:</span>
+            <span className="text-slate-200 font-bold">{identity}</span>
           </div>
-          <div className="text-[11px] font-mono text-slate-500">Acoustic Similarity</div>
-        </div>
-      </div>
+          <div className="flex justify-between text-xs font-mono">
+            <span className="text-slate-400">Embedding Match Score:</span>
+            <span className="text-cyan-400 font-bold tabular-nums">
+              {isAnalyzing ? "--" : `${matchScore.toFixed(1)}%`}
+            </span>
+          </div>
 
-      <div className="w-full h-1.5 rounded-full bg-slate-800 mt-3 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-700"
-          style={{ width: `${isAnalyzing ? 50 : matchScore}%` }}
-        />
+          <div className="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700/60">
+            <div
+              className={`h-full ${badge.barColor} transition-all duration-500`}
+              style={{ width: `${isAnalyzing ? 40 : Math.min(100, Math.max(0, matchScore))}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="text-[10px] font-mono text-slate-500 flex justify-between px-1">
+          <span>ECAPA-TDNN 192-d Cosine</span>
+          <span>Threshold: &ge;65.0%</span>
+        </div>
       </div>
     </div>
   );

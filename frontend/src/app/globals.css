@@ -115,6 +115,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Cybersecurity SOC Theme Tokens */
+  --bg-void: #050811;
+  --bg-panel: #0a0f1d;
+  --bg-panel-hover: #10172b;
+  --threat-critical: #ff2a54;
+  --threat-high: #ff7a00;
+  --threat-moderate: #ffb800;
+  --threat-safe: #00e599;
+  --accent-cyan: #00f2fe;
+  --accent-indigo: #6366f1;
+  --accent-purple: #a855f7;
 }
 
 @layer base {

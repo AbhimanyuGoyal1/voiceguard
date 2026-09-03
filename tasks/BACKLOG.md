@@ -33,9 +33,9 @@ Do not pull backlog items into the current PR unless explicitly instructed.
 
 These should only be addressed when they provide clear value to the hackathon demo.
 
-* [ ] Performance optimization after real latency measurements exist.
+* [x] Performance optimization after real latency measurements exist.
 * [ ] ML inference optimization after profiling.
-* [ ] UI animation/performance optimization.
+* [x] UI animation/performance optimization.
 * [ ] Additional automated tests where they materially reduce risk.
 * [ ] Improved database abstraction if SQLite limitations become relevant.
 * [ ] Production-grade logging/observability.

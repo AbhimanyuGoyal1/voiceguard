@@ -26,11 +26,21 @@ export function LiveWaveform({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const rect = canvas.getBoundingClientRect();
+    const displayWidth = rect.width > 0 ? rect.width : 800;
+    const displayHeight = height;
+
+    canvas.width = Math.floor(displayWidth * dpr);
+    canvas.height = Math.floor(displayHeight * dpr);
+    ctx.resetTransform?.();
+    ctx.scale(dpr, dpr);
+
     let phase = 0;
 
     const render = () => {
-      const width = canvas.width;
-      const h = canvas.height;
+      const width = displayWidth;
+      const h = displayHeight;
 
       ctx.clearRect(0, 0, width, h);
 
@@ -47,6 +57,17 @@ export function LiveWaveform({
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
         ctx.stroke();
+      }
+
+      if (state === "COMPLETE") {
+        // Draw static baseline grid once and do NOT loop rAF
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(width, h / 2);
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.6)"; // emerald-500 static line
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        return;
       }
 
       if (state === "RECORDING" && analyser) {
@@ -125,7 +146,7 @@ export function LiveWaveform({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [analyser, state]);
+  }, [analyser, state, height]);
 
   return (
     <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-950 border border-zinc-800/80 ${className}`}>

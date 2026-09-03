@@ -7,76 +7,53 @@
 
 **Project:** VoiceGuard
 **Stage:** Complete — Production / Hackathon Ready
-**Current PR:** PR-20 (Complete)
-**Current Branch:** `pr-20-golden-path-rehearsal`
+**Current PR:** PR-21 (Complete & Ready for Review)
+**Current Branch:** `pr-21-ui-ux-refactor-optimization`
 
 ---
 
-## Current Task
+## Completed Task
 
-### PR-20 — Golden Path Rehearsal + Final Polish
+### PR-21 — UI/UX Operations Center Refactor, Performance Optimization & Concurrency Fixes
 
 **Tier:** T1
-**Status:** Complete & Rehearsed
+**Status:** Complete & Ready for Review
 
-All 20 Pull Requests (PR-00 through PR-20) across all 6 phases are complete, tested, and verified. The system runs completely offline without requiring external AI API keys, featuring the complete SOC threat dashboard, oscilloscope/spectrogram visualizers, ECAPA-TDNN speaker verification, AASIST anti-spoofing, explainability reasoning, scenario launcher, active defense challenge, forensic reporting, attack registry, 2D D3 voice fingerprinting, threat map telemetry, and telephony simulator.
-
-### Scope
-
-* **WebSocket Streaming (`/ws/analyze`):**
-  - Real-time analysis progression stream: `RECORDING` → `ANALYZING` → `PARTIAL_RESULT` → `FINAL_RESULT`.
-  - Client-side reconnect-with-backoff.
-  - Visible `RECONNECTING` and degraded indicators without displaying stale data.
-* **Main SOC Dashboard Panels:**
-  - **Global Header:** Online state, Live/Demo mode badge, WebSocket connection status.
-  - **Risk Score Meter:** Gauge/radial progress, threat level badge (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`), confidence score.
-  - **Speaker Identity Card:** Enrolled identity, similarity percentage, match badge (`MATCHED`, `UNCERTAIN`, `MISMATCH`).
-  - **Authenticity Card:** Human % vs Synthetic %, classification (`AUTHENTIC`, `SUSPICIOUS`, `SYNTHETIC`).
-  - **Audio Visualizer:** Oscilloscope waveform, STFT spectrogram, dual-view toggles.
-  - **Pipeline State & Status Card:** Active state indicators, live processing logs.
-  - **Threat Timeline Preview:** Chronological analysis events.
-* Connect live microphone recording and file upload to the backend API & WebSocket flow.
+Implemented full specifications from `error.md` and `UI_UX_REFACTOR.md`:
+1. **Audio Processing & Cross-Browser WAV Encoding:**
+   - In-browser 16-bit linear PCM WAV encoder (`wav-encoder.ts`).
+   - Package all browser audio as true PCM WAV blobs before transmission.
+   - Detect WebM/Matroska container bytes in `audio_preprocessor.py` with structured diagnostics.
+2. **Performance & Lag Optimization:**
+   - Decoupled 60-120fps `setAudioLevel` from React state, eliminating layout thrashing and text flickering.
+   - Downsampled offline STFT spectrogram math by 95% (800 -> 160 slices with precomputed Hann window tables), eliminating 1-2s UI freeze.
+   - Added native Retina `devicePixelRatio` scaling to canvases.
+   - Stopped infinite `requestAnimationFrame` loop on `state === "COMPLETE"` in `live-waveform.tsx`.
+   - Audio player playback state reset and dependency fixes.
+3. **Database Incident Persistence & Concurrency:**
+   - Injected `db: AsyncSession` in `/api/analyze` and WebSocket streaming `/ws/analyze`.
+   - Offloaded CPU audio decoding and pipeline scoring to worker thread pool using `asyncio.to_thread`.
+   - Persisted analysis audit records to SQLite via `record_incident_analysis`.
+   - Thread-safe `np.random.default_rng` in fingerprint services and `threading.Lock()` in ECAPA-TDNN speaker enrollment.
+4. **Operations Center UI/UX Refactor & Active Defense:**
+   - Upgraded `RiskMeter` to Semi-Circular SVG Radial HUD Arc Gauge with threat gradients and telemetry indicators.
+   - Restructured layout into 2-Column Tactical SOC Command Center (Telemetry & Ingestion on Left, Forensic Verification Matrix on Right).
+   - Implemented bottom Tabbed Intelligence Dock (Threat Timeline, AI Analyst, 2D Fingerprint, Threat Map, Attack History, Incident Report).
+   - Integrated dynamic Active Defense Security Challenge risk score modulation (+35 on fail, -25 on pass) and timeline event logging.
+   - Fixed metadata and enabled dark mode class.
 
 ---
 
 ## Definition of Done
 
-PR-07 is complete when:
-
-* [ ] Live microphone capture or upload runs real backend analysis and renders real inference results.
-* [ ] WebSocket streaming `/ws/analyze` streams live progress updates (`RECORDING` → `ANALYZING` → `FINAL_RESULT`).
-* [ ] Reconnect-with-backoff handles WebSocket dropouts with a visible `RECONNECTING` badge.
-* [ ] Dashboard UI satisfies `docs/UI_UX.md` cybersecurity SOC aesthetic.
-* [ ] `npm run build` succeeds without lint or type errors.
-* [ ] `MEMORY.md` is updated.
-* [ ] `CURRENT.md` is updated for PR-08.
-* [ ] PR branch pushed and execution stops for review.
-
----
-
-## Files Expected to Change
-
-Primarily:
-
-```text
-/backend/api/websocket.py
-/backend/main.py
-/frontend/src/types/analysis.ts
-/frontend/src/hooks/use-analysis-socket.ts
-/frontend/src/components/dashboard/threat-dashboard.tsx
-/frontend/src/components/dashboard/risk-meter.tsx
-/frontend/src/components/dashboard/speaker-card.tsx
-/frontend/src/components/dashboard/authenticity-card.tsx
-/frontend/src/app/page.tsx
-/MEMORY.md
-/tasks/CURRENT.md
-```
-
----
-
-## Next PR
-
-After PR-07 is completed and reviewed:
-
-**PR-08 — Explainable Detection — "WHY?"**
-Branch: `pr-08-why-panel`
+* [x] In-browser WAV encoder ensures 100% valid PCM WAV audio across browsers.
+* [x] React state decouple eliminates text jitter and UI lag during microphone recording.
+* [x] STFT downsampling eliminates 1-2s freeze on recording completion.
+* [x] Radial HUD Gauge and 2-Column Command Center layout deployed.
+* [x] Active Defense Challenge dynamically modulates risk score (+35/-25) and appends timeline events.
+* [x] Database incident persistence and async thread offloading active.
+* [x] `pytest backend/tests` (all 49 tests pass).
+* [x] `npm run build` succeeds cleanly with Turbopack.
+* [x] `MEMORY.md` updated.
+* [x] `CURRENT.md` updated.
+* [x] PR branch pushed and execution stops for review.

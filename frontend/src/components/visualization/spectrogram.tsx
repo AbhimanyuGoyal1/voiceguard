@@ -24,39 +24,54 @@ export function Spectrogram({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const width = canvas.width;
-    const h = canvas.height;
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const rect = canvas.getBoundingClientRect();
+    const displayWidth = rect.width > 0 ? rect.width : 800;
+    const displayHeight = height;
+
+    canvas.width = Math.floor(displayWidth * dpr);
+    canvas.height = Math.floor(displayHeight * dpr);
+    ctx.resetTransform?.();
+    ctx.scale(dpr, dpr);
+
+    const width = displayWidth;
+    const h = displayHeight;
 
     // 1. If we have a decoded static AudioBuffer (Completed recording or uploaded sample)
     if (audioBuffer) {
       const channelData = audioBuffer.getChannelData(0);
-      const sampleRate = audioBuffer.sampleRate;
       const fftSize = 512;
       const halfFft = fftSize / 2;
-      const numSlices = width;
+      const numSlices = 160; // Downsample from width (800) to 160 points (95% fewer iterations)
       const hopSize = Math.max(1, Math.floor((channelData.length - fftSize) / numSlices));
+      const sliceCanvasWidth = width / numSlices;
 
       ctx.fillStyle = "#09090b"; // zinc-950
       ctx.fillRect(0, 0, width, h);
 
-      // Create high-resolution offline spectrogram using simulated Short-Time Fourier Transform (STFT)
+      // Precompute Hann window constants once outside loop
+      const HANN_64 = new Float32Array(64);
+      for (let n = 0; n < 64; n++) {
+        HANN_64[n] = 0.5 * (1 - Math.cos((2 * Math.PI * n) / 64));
+      }
+
+      // High-performance offline STFT calculation
       for (let slice = 0; slice < numSlices; slice++) {
         const offset = slice * hopSize;
         if (offset + fftSize >= channelData.length) break;
+        const x = slice * sliceCanvasWidth;
 
         // Compute power in frequency bins
-        for (let bin = 0; bin < halfFft; bin += 2) {
-          // Bin energy calculation with Hann window
+        for (let bin = 0; bin < halfFft; bin += 4) {
           let real = 0;
           let imag = 0;
           const k = bin;
 
-          // Sample representative points
-          for (let n = 0; n < 64; n++) {
+          // Sample points with precomputed window
+          for (let n = 0; n < 64; n += 2) {
             const sampleIdx = offset + n * 8;
             if (sampleIdx >= channelData.length) break;
-            const w = 0.5 * (1 - Math.cos((2 * Math.PI * n) / 64)); // Hann window
-            const val = channelData[sampleIdx] * w;
+            const val = channelData[sampleIdx] * HANN_64[n];
             const angle = (2 * Math.PI * k * n) / 64;
             real += val * Math.cos(angle);
             imag -= val * Math.sin(angle);
@@ -65,14 +80,14 @@ export function Spectrogram({
           const magnitude = Math.sqrt(real * real + imag * imag);
           const normalized = Math.min(1, Math.max(0, magnitude * 4));
 
-          // Color mapping: Forensic heat palette (Deep Navy -> Cyan -> Purple -> Gold/Orange)
+          // Forensic heat palette (Deep Navy -> Cyan -> Purple -> Gold/Orange)
           const y = h - (bin / halfFft) * h;
           if (normalized > 0.05) {
             const r = Math.floor(normalized * 240);
             const g = Math.floor(Math.sin(normalized * Math.PI) * 200 + normalized * 50);
             const b = Math.floor((1 - normalized) * 180 + normalized * 80);
             ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-            ctx.fillRect(slice, y, 1.5, (h / halfFft) * 2.5);
+            ctx.fillRect(x, y, sliceCanvasWidth + 0.5, (h / halfFft) * 4.5);
           }
         }
       }
@@ -130,7 +145,7 @@ export function Spectrogram({
     ctx.fillStyle = "rgba(113, 113, 122, 0.4)";
     ctx.font = "10px monospace";
     ctx.fillText("FORENSIC SPECTROGRAM • AWAITING AUDIO INPUT", width / 2 - 120, h / 2 + 4);
-  }, [audioBuffer, analyser]);
+  }, [audioBuffer, analyser, height]);
 
   return (
     <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-950 border border-zinc-800/80 ${className}`}>

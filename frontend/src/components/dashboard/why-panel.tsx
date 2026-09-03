@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnalysisResult } from "@/types/analysis";
-import { HelpCircle, ChevronDown, ChevronUp, ShieldAlert, CheckCircle2, Zap, Layers } from "lucide-react";
+import { HelpCircle, ChevronDown, ChevronUp, ShieldAlert, CheckCircle2, Layers } from "lucide-react";
 
 interface WhyPanelProps {
   analysis: AnalysisResult | null;

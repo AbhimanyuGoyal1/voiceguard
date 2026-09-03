@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
-import { Fingerprint, RefreshCw, Sparkles, Crosshair, HelpCircle } from "lucide-react";
+import { Fingerprint, RefreshCw, Sparkles } from "lucide-react";
 
 export interface FingerprintPoint {
   id: string;
@@ -24,7 +24,7 @@ export function VoiceFingerprint({ scenarioId, refreshTrigger }: VoiceFingerprin
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<FingerprintPoint | null>(null);
 
-  const fetchProjection = async () => {
+  const fetchProjection = useCallback(async () => {
     setIsLoading(true);
     try {
       const url = scenarioId
@@ -40,11 +40,11 @@ export function VoiceFingerprint({ scenarioId, refreshTrigger }: VoiceFingerprin
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [scenarioId]);
 
   useEffect(() => {
     fetchProjection();
-  }, [scenarioId, refreshTrigger]);
+  }, [fetchProjection, refreshTrigger]);
 
   // D3 2D Scatter Projection Visualization
   useEffect(() => {
