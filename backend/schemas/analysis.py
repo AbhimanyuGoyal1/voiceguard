@@ -74,6 +74,21 @@ class TimelineEvent(BaseModel):
     level: Literal["INFO", "WARN", "CRITICAL"] = "INFO"
 
 
+QualityRating = Literal["EXCELLENT", "GOOD", "FAIR", "DEGRADED"]
+
+
+class AudioQualitySignal(BaseModel):
+    quality_score: float = Field(85.0, description="Overall voice quality index 0.0 - 100.0")
+    rating: QualityRating = Field("GOOD", description="Quality band rating")
+    snr_db: float = Field(20.0, description="Estimated Signal-to-Noise Ratio in dB")
+    clipping_pct: float = Field(0.0, description="Percentage of audio samples with digital clipping")
+    is_noisy: bool = Field(False, description="True if background noise exceeds acceptable thresholds")
+    is_clipped: bool = Field(False, description="True if severe clipping distortion detected")
+    is_degraded: bool = Field(False, description="True if audio quality is degraded")
+    confidence_multiplier: float = Field(1.0, description="Confidence scaling factor for degraded audio")
+    recommendation: Optional[str] = Field("Optimal acoustic signal quality.", description="Actionable advisory")
+
+
 class DegradationStatus(BaseModel):
     is_degraded: bool = False
     reason: Optional[str] = None
@@ -92,6 +107,9 @@ class AnalysisResult(BaseModel):
     evidence: EvidenceSignal
     timeline: List[TimelineEvent] = Field(default_factory=list)
     degradation: DegradationStatus = Field(default_factory=DegradationStatus)
+    quality: AudioQualitySignal = Field(default_factory=AudioQualitySignal)
+    capture_id: Optional[str] = None
+    capture_file: Optional[str] = None
 
 
 class ErrorResponse(BaseModel):

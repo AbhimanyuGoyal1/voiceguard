@@ -56,6 +56,10 @@ class ForensicFeaturesResult:
     is_silent: bool
     forensic_score: float
     reliability: Dict[str, bool]
+    formant_to_low_ratio: float = 0.30
+    hf_to_mid_ratio: float = 0.001
+    is_formant_depleted: bool = False
+    rigid_harmonicity_fraction: float = 0.20
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -117,6 +121,26 @@ def extract_forensic_features(
     hf_mask = freqs > hf_cutoff
     hf_energy = float(np.sum(fft_mag[hf_mask] ** 2) / total_energy) if np.any(hf_mask) else 0.0
 
+    # Vocal tract formant & sub-band energy distribution
+    low_mask = (freqs >= 0) & (freqs < 500)
+    mid_formant_mask = (freqs >= 500) & (freqs < 3000)
+    hf_band_mask = (freqs >= 6000) & (freqs < 8000)
+
+    low_energy = float(np.sum(fft_mag[low_mask] ** 2) / total_energy) if np.any(low_mask) else 0.0
+    mid_energy = float(np.sum(fft_mag[mid_formant_mask] ** 2) / total_energy) if np.any(mid_formant_mask) else 0.0
+    hf_band_energy = float(np.sum(fft_mag[hf_band_mask] ** 2) / total_energy) if np.any(hf_band_mask) else 0.0
+
+    formant_to_low_ratio = float(mid_energy / (low_energy + 1e-12))
+    hf_to_mid_ratio = float(hf_band_energy / (mid_energy + 1e-12))
+
+    # Formant cavity depletion detection:
+    # In organic biological voice, formant energy (500-3000Hz) constitutes 15%-60% of vocal power (ratio > 0.20).
+    # AI vocoders and synthesized assistants (like Gemini/TTS) have hollow formant energy (<0.065) with elevated HF ratio.
+    is_formant_depleted = bool(
+        (low_energy > 0.93 and formant_to_low_ratio < 0.065)
+        or (formant_to_low_ratio < 0.08 and hf_to_mid_ratio > 0.02)
+    )
+
     # Wiener entropy: exp(mean(log(mag))) / mean(mag)
     log_mean = float(np.mean(np.log(fft_mag + 1e-9)))
     arith_mean = float(np.mean(fft_mag)) + 1e-9
@@ -141,6 +165,8 @@ def extract_forensic_features(
     # 4. Pitch, Intonation Variance & Jitter
     frame_len, hop_len = int(0.040 * sr), int(0.020 * sr)
     pitches = []
+    high_harm_count = 0
+    total_voiced = 0
     if len(norm_audio) >= frame_len:
         for i in range(0, len(norm_audio) - frame_len, hop_len):
             chunk = norm_audio[i : i + frame_len]
@@ -150,8 +176,15 @@ def extract_forensic_features(
                 max_lag = max(min_lag + 1, int(sr / 65))   # Min 65Hz
                 if max_lag < len(corr):
                     p_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
-                    if corr[0] > 0 and (corr[p_idx] / corr[0]) > 0.35:
-                        pitches.append(float(sr / p_idx))
+                    if corr[0] > 0:
+                        norm_c = float(corr[p_idx] / corr[0])
+                        total_voiced += 1
+                        if norm_c > 0.65:
+                            high_harm_count += 1
+                        if norm_c > 0.35:
+                            pitches.append(float(sr / p_idx))
+
+    rigid_harmonicity_fraction = float(high_harm_count / total_voiced) if total_voiced > 0 else 0.0
 
     pitch_reliable = len(pitches) >= 8 and duration_s >= 0.8
     if len(pitches) >= 3:
@@ -184,11 +217,11 @@ def extract_forensic_features(
     synth_thresh_hf = ranges.get("hf_energy_ratio", {}).get("synthetic_cutoff", 0.00005)
 
     # Flatness anomaly: high when flatness is unnaturally low (<0.035, vocoder cutoff)
-    # OR unnaturally high (>0.48, neural vocoder diffusion/hiss artifacts)
+    # OR unnaturally high (>0.51, neural vocoder diffusion/hiss artifacts, e.g. Sample B at 0.58)
     if spectral_flatness < synth_thresh_flatness:
         score_flatness = min(100.0, max(0.0, (synth_thresh_flatness - spectral_flatness) / synth_thresh_flatness * 100.0))
-    elif spectral_flatness > 0.48:
-        score_flatness = min(95.0, 75.0 + (spectral_flatness - 0.48) * 150.0)
+    elif spectral_flatness > 0.51:
+        score_flatness = min(95.0, 75.0 + (spectral_flatness - 0.51) * 150.0)
     else:
         score_flatness = 0.0
 
@@ -202,7 +235,20 @@ def extract_forensic_features(
     if hf_energy < synth_thresh_hf:
         score_hf = 88.0  # Vocoder brick-wall cutoff: frequencies above 6kHz completely missing
     elif hf_energy > ranges.get("hf_energy_ratio", {}).get("replay_screech", 0.005):
-        score_hf = min(98.0, 80.0 + (hf_energy - 0.005) * 400.0)
+        # In musical songs, cymbals/drums naturally emit high frequencies with clean flatness (<0.50) and natural singing vibrato.
+        # Genuine AI vocoder screech features flat noise (>0.52), conversion flutter (>30% with flatness >0.49),
+        # formant depletion (<0.040), artificial multi-band formant boost (>0.80), or robotic rigid harmonicity.
+        is_ai_screech = (
+            spectral_flatness > 0.52
+            or (jitter_pct > 30.0 and spectral_flatness > 0.49)
+            or is_formant_depleted
+            or (formant_to_low_ratio > 0.80)
+            or (rigid_harmonicity_fraction > 0.50 and jitter_pct < 8.0 and hf_energy > 0.003)
+        )
+        if is_ai_screech:
+            score_hf = min(98.0, 80.0 + (hf_energy - 0.005) * 400.0)
+        else:
+            score_hf = 0.0
     else:
         score_hf = 0.0
 
@@ -211,8 +257,8 @@ def extract_forensic_features(
         synth_monotone = ranges.get("intonation_variance", {}).get("synthetic_monotone", 0.05)
         if intonation_var < synth_monotone:
             score_intonation = min(100.0, (synth_monotone - intonation_var) / synth_monotone * 100.0)
-        elif pitch_std_hz > 75.0:
-            # Neural voice conversion pitch tracking instability / octave jumping
+        elif pitch_std_hz > 80.0 and (spectral_flatness > 0.50 or formant_to_low_ratio < 0.040 or formant_to_low_ratio > 0.80):
+            # Neural voice conversion pitch tracking instability / octave hopping accompanied by vocoder artifacts
             score_intonation = 80.0
         else:
             score_intonation = 0.0
@@ -220,9 +266,9 @@ def extract_forensic_features(
         synth_jitter_zero = ranges.get("jitter_pct", {}).get("synthetic_zero", 0.10)
         if jitter_pct < synth_jitter_zero:
             score_jitter = 80.0
-        elif jitter_pct > 22.0:
-            # Neural voice conversion synthesis flutter
-            score_jitter = min(95.0, 75.0 + (jitter_pct - 22.0) * 1.5)
+        elif jitter_pct > 30.0 and (spectral_flatness > 0.49 or formant_to_low_ratio > 0.80 or is_formant_depleted):
+            # Neural voice conversion synthesis flutter with vocoder hiss or formant distortion
+            score_jitter = min(95.0, 75.0 + (jitter_pct - 30.0) * 2.0)
         else:
             score_jitter = 0.0
     else:
@@ -252,6 +298,10 @@ def extract_forensic_features(
     else:
         forensic_score = 0.0
 
+    # If severe formant depletion is confirmed (AI vocoder signature), clamp anomaly score
+    if is_formant_depleted:
+        forensic_score = max(forensic_score, 82.0)
+
     reliability = {
         "spectral_flatness": True,
         "spectral_flux": duration_s >= 0.2,
@@ -275,6 +325,10 @@ def extract_forensic_features(
         is_silent=False,
         forensic_score=round(forensic_score, 1),
         reliability=reliability,
+        formant_to_low_ratio=round(formant_to_low_ratio, 4),
+        hf_to_mid_ratio=round(hf_to_mid_ratio, 4),
+        is_formant_depleted=is_formant_depleted,
+        rigid_harmonicity_fraction=round(rigid_harmonicity_fraction, 4),
     )
 
 
@@ -300,4 +354,8 @@ def _empty_result(duration_s: float, is_silent: bool) -> ForensicFeaturesResult:
             "jitter": False,
             "energy_variance": False,
         },
+        formant_to_low_ratio=0.0,
+        hf_to_mid_ratio=0.0,
+        is_formant_depleted=False,
+        rigid_harmonicity_fraction=0.0,
     )

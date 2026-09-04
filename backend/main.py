@@ -11,6 +11,7 @@ from backend.api.history import router as history_router
 from backend.api.fingerprint import router as fingerprint_router
 from backend.api.threat_map import router as threat_map_router
 from backend.api.analyst import router as analyst_router
+from backend.api.captures import router as captures_router
 from backend.api.websocket import ws_router
 
 
@@ -48,6 +49,7 @@ app.include_router(history_router)
 app.include_router(fingerprint_router)
 app.include_router(threat_map_router)
 app.include_router(analyst_router)
+app.include_router(captures_router)
 app.include_router(ws_router)
 
 

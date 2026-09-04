@@ -9,6 +9,7 @@ from backend.services.audio_preprocessor import decode_and_validate_audio
 from backend.services.pipeline import build_analysis_pipeline_response
 from backend.database import AsyncSessionLocal
 from backend.services.history_service import record_incident_analysis
+from backend.services.capture_archiver import archive_capture
 
 ws_router = APIRouter(tags=["WebSocket"])
 
@@ -90,6 +91,20 @@ async def websocket_analysis_endpoint(websocket: WebSocket):
                         audio_tensor=tensor,
                         session_id=session_id,
                     )
+
+                    # Archive incoming stream
+                    try:
+                        capture_meta = await asyncio.to_thread(
+                            archive_capture,
+                            raw_bytes=raw_bytes,
+                            filename=f"{session_id}.wav",
+                            result=final_result,
+                            session_id=session_id,
+                        )
+                        final_result.capture_id = capture_meta.get("capture_id")
+                        final_result.capture_file = capture_meta.get("capture_file")
+                    except Exception:
+                        pass
 
                     # Persist incident record
                     try:

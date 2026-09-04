@@ -14,6 +14,13 @@
       "path": "audiosamples/Sample B.mpeg",
       "label": "synthetic",
       "notes": "Explicitly provided Sample B AI-converted voice clone sample"
+    },
+    {
+      "id": "capture_001",
+      "designation": "Mic Capture #1 (Gemini Mobile)",
+      "path": "audiosamples/captures/capture_001_20260904_021536.wav",
+      "label": "synthetic",
+      "notes": "Gemini Live mobile assistant voice played over speaker into microphone"
     }
   ],
   "forensic_parameters": {

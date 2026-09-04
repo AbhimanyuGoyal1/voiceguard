@@ -70,6 +70,18 @@ export interface DegradationStatus {
   unavailable_signals: string[];
 }
 
+export interface AudioQualitySignal {
+  quality_score: number; // 0 - 100
+  rating: "EXCELLENT" | "GOOD" | "FAIR" | "DEGRADED";
+  snr_db: number;
+  clipping_pct: number;
+  is_noisy: boolean;
+  is_clipped: boolean;
+  is_degraded: boolean;
+  confidence_multiplier: number;
+  recommendation?: string;
+}
+
 export interface SignalFactor {
   id: string;
   name: string;
@@ -105,5 +117,8 @@ export interface AnalysisResult {
   evidence: EvidenceSignal;
   timeline: TimelineEvent[];
   degradation: DegradationStatus;
+  quality?: AudioQualitySignal;
   explanation?: ExplainabilityReport;
+  capture_id?: string;
+  capture_file?: string;
 }

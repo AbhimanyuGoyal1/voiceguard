@@ -43,3 +43,6 @@ yarn-error.log*
 *.pem
 .vscode/
 .idea/
+
+# Audio Captures (generated during live testing/demo)
+audiosamples/captures/
