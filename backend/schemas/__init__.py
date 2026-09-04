@@ -10,6 +10,7 @@ from backend.schemas.analysis import (
     RiskAssessment,
     TimelineEvent,
     DegradationStatus,
+    AudioQualitySignal,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "RiskAssessment",
     "TimelineEvent",
     "DegradationStatus",
+    "AudioQualitySignal",
 ]

@@ -70,11 +70,28 @@ class AntiSpoofDetector:
         intonation_var = forensic_res.intonation_variance
         jitter = forensic_res.jitter_pct / 100.0
 
-        # Forensic Anomaly scoring:
         is_direct_clone = (spectral_flux < 0.15) or (hf_energy < 0.00005) or (spectral_flatness < 0.035)
-        is_hf_anomaly = (hf_energy > 0.005)
-        is_vocoder_conversion = (spectral_flatness > 0.48 and forensic_res.jitter_pct > 18.0)
-        is_tts_replay = (hf_energy > 0.005 and intonation_var < 0.20 and forensic_res.pitch_reliable)
+        fmt_lo = getattr(forensic_res, "formant_to_low_ratio", 0.20)
+        is_formant_depleted = getattr(forensic_res, "is_formant_depleted", False)
+        is_formant_boosted = (fmt_lo > 0.80)
+        rigid_harm = getattr(forensic_res, "rigid_harmonicity_fraction", 0.0)
+        is_rigid_ai_harmonicity = (rigid_harm > 0.50 and forensic_res.jitter_pct < 8.0 and hf_energy > 0.003)
+        is_vocoder_conversion = (spectral_flatness > 0.52 and forensic_res.jitter_pct > 28.0) or (spectral_flatness > 0.55) or is_formant_boosted
+
+        # In songs, cymbals/drums naturally emit high frequencies (>6kHz), but with clean flatness (<0.50)
+        # and natural singing vibrato. Genuine AI vocoder screech features flat noise (>0.52),
+        # conversion flutter (>30% with flatness >0.49), formant depletion (<0.040), artificial multi-band formant boost (>0.80),
+        # or robotic rigid harmonicity.
+        is_hf_anomaly = (
+            hf_energy > 0.005 and (
+                spectral_flatness > 0.52
+                or (forensic_res.jitter_pct > 30.0 and spectral_flatness > 0.49)
+                or is_formant_depleted
+                or is_formant_boosted
+                or is_rigid_ai_harmonicity
+            )
+        )
+        is_tts_replay = (hf_energy > 0.005 and intonation_var < 0.20 and forensic_res.pitch_reliable and is_hf_anomaly)
 
         if is_direct_clone:
             spectral_anomaly_score = float(np.clip((0.05 - spectral_flatness) * 2000.0, 75.0, 96.0))
@@ -84,6 +101,10 @@ class AntiSpoofDetector:
             spectral_anomaly_score = 86.0
             prosody_anomaly_score = 82.0
             temporal_artifacts_score = 80.0
+        elif is_formant_depleted:
+            spectral_anomaly_score = 86.0
+            prosody_anomaly_score = 82.0
+            temporal_artifacts_score = 76.0
         elif is_vocoder_conversion:
             spectral_anomaly_score = 85.0
             prosody_anomaly_score = 80.0
@@ -106,6 +127,8 @@ class AntiSpoofDetector:
             forensic_synth_pct = max(forensic_synth_pct, 78.0)
         elif is_hf_anomaly:
             forensic_synth_pct = max(forensic_synth_pct, 76.0)
+        elif is_formant_depleted:
+            forensic_synth_pct = max(forensic_synth_pct, 78.0)
         elif is_vocoder_conversion:
             forensic_synth_pct = max(forensic_synth_pct, 75.0)
         elif is_tts_replay:

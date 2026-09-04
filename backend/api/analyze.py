@@ -9,6 +9,7 @@ from backend.services.audio_preprocessor import decode_and_validate_audio, Audio
 from backend.services.pipeline import build_analysis_pipeline_response
 from backend.database import get_db
 from backend.services.history_service import record_incident_analysis
+from backend.services.capture_archiver import archive_capture
 
 router = APIRouter(prefix="/api", tags=["Audio Analysis"])
 
@@ -56,6 +57,21 @@ async def analyze_audio(
             session_id=session_id,
             enrolled_speaker_id=enrolled_speaker_id or "Primary User",
         )
+
+        # Archive incoming test audio and analysis result for calibration
+        try:
+            capture_meta = await asyncio.to_thread(
+                archive_capture,
+                raw_bytes=file_bytes,
+                filename=file.filename or "microphone_test.wav",
+                result=result,
+                session_id=session_id,
+            )
+            result.capture_id = capture_meta.get("capture_id")
+            result.capture_file = capture_meta.get("capture_file")
+        except Exception:
+            pass
+
         # Persist incident analysis to database
         try:
             await record_incident_analysis(db, result)

@@ -12,11 +12,13 @@ from backend.schemas.analysis import (
     RiskAssessment,
     TimelineEvent,
     DegradationStatus,
+    AudioQualitySignal,
 )
 from ml.speaker import speaker_verifier
 from ml.antispoof import antispoof_detector
 from backend.services.risk_engine import evaluate_risk
 from backend.services.explainability import generate_explainability_report
+from backend.services.audio_quality import assess_audio_quality
 
 
 def build_analysis_pipeline_response(
@@ -175,7 +177,19 @@ def build_analysis_pipeline_response(
         is_authenticity_available=is_antispoof_ok,
     )
 
-    state = "PARTIAL_ANALYSIS" if is_degraded else "COMPLETE"
+    is_subsystem_degraded = is_degraded
+
+    # 4. Assess Acoustic Signal Quality & Integrity
+    quality_dict = assess_audio_quality(audio_tensor, sample_rate=metadata.get("target_sample_rate", 16000))
+    quality = AudioQualitySignal(**quality_dict)
+
+    if quality.is_degraded:
+        # Scale down confidence on degraded/noisy audio to prevent false certainty
+        authenticity.confidence = round(float(authenticity.confidence * quality.confidence_multiplier), 2)
+        risk.confidence = round(float(risk.confidence * quality.confidence_multiplier), 2)
+        speaker.confidence = round(float(speaker.confidence * quality.confidence_multiplier), 2)
+
+    state = "PARTIAL_ANALYSIS" if is_subsystem_degraded else "COMPLETE"
 
     evidence = EvidenceSignal(
         spectral_anomaly=anti_evidence["spectral_anomaly"],
@@ -227,6 +241,18 @@ def build_analysis_pipeline_response(
         ),
     ]
 
+    if quality.is_degraded:
+        timeline.append(
+            TimelineEvent(
+                id=f"evt_{uuid.uuid4().hex[:8]}",
+                timestamp=now_iso,
+                type="AUDIO_QUALITY_ALERT",
+                label=f"Acoustic Quality: {quality.rating} ({quality.quality_score}%)",
+                details=quality.recommendation,
+                level="WARN",
+            )
+        )
+
     # Construct complete AnalysisResult
     result = AnalysisResult(
         session_id=sid,
@@ -240,10 +266,11 @@ def build_analysis_pipeline_response(
         evidence=evidence,
         timeline=timeline,
         degradation=DegradationStatus(
-            is_degraded=is_degraded,
-            reason="Partial analysis due to signal failure" if is_degraded else None,
+            is_degraded=bool(is_subsystem_degraded or quality.is_degraded),
+            reason="Partial analysis due to signal failure" if unavailable_signals else (f"Degraded Audio: {quality.recommendation}" if quality.is_degraded else None),
             unavailable_signals=unavailable_signals,
         ),
+        quality=quality,
     )
 
     # Attach deterministic explainability report

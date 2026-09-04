@@ -14,6 +14,8 @@ import { IncidentReport } from "@/components/dashboard/incident-report";
 import { AttackHistory, IncidentRecord } from "@/components/dashboard/attack-history";
 import { VoiceFingerprint } from "@/components/dashboard/voice-fingerprint";
 import { AiSecurityAnalyst } from "@/components/dashboard/ai-security-analyst";
+import { CapturesManager } from "@/components/dashboard/captures-manager";
+import { AudioQualityBadge } from "@/components/dashboard/audio-quality-badge";
 import { useAnalysisSocket } from "@/hooks/use-analysis-socket";
 import { ValidatedAudio } from "@/types/audio";
 import { AnalysisResult, TimelineEvent } from "@/types/analysis";
@@ -37,7 +39,7 @@ import {
 import { VoiceLibraryScenario, VOICE_LIBRARY } from "@/lib/voice-library";
 
 type IngestionMode = "CALL" | "CAPTURE" | "PRESETS";
-type IntelligenceTab = "timeline" | "analyst" | "fingerprint" | "history" | "report";
+type IntelligenceTab = "timeline" | "analyst" | "fingerprint" | "history" | "report" | "captures";
 
 export function ThreatDashboard() {
   const [ingestionMode, setIngestionMode] = useState<IngestionMode>("CALL");
@@ -48,6 +50,7 @@ export function ThreatDashboard() {
   const [selectedHistoryIncidentId, setSelectedHistoryIncidentId] = useState<string | null>(null);
   const [isSimulatingAudio, setIsSimulatingAudio] = useState(false);
   const [modulatedResult, setModulatedResult] = useState<AnalysisResult | null>(null);
+  const [labeledStatus, setLabeledStatus] = useState<Record<string, "genuine" | "synthetic">>({});
 
   const {
     isConnected,
@@ -57,6 +60,24 @@ export function ThreatDashboard() {
     errorMessage,
     analyzeViaHttp,
   } = useAnalysisSocket();
+
+  const handleLabelCapture = useCallback(async (captureId: string, label: "human" | "ai") => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/captures/${captureId}/label`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, auto_recalibrate: true }),
+      });
+      if (res.ok) {
+        setLabeledStatus((prev) => ({
+          ...prev,
+          [captureId]: label === "human" ? "genuine" : "synthetic",
+        }));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Sync modulatedResult whenever new analysis arrives from pipeline
   useEffect(() => {
@@ -271,8 +292,60 @@ export function ThreatDashboard() {
 
           {/* RIGHT COLUMN: Executive Biometric & Forensic Threat HUD (Cols 6) */}
           <div className="lg:col-span-6 space-y-6">
+            {/* Live Microphone Capture Archiving & Ground Truth Banner */}
+            {activeResult?.capture_file && (
+              <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-xs font-mono font-bold text-cyan-300 uppercase">
+                      {activeResult.capture_id?.replace("_", " #") || "CAPTURE RECORDED"}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      ({activeResult.capture_file})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Saved to <code className="text-cyan-300">audiosamples/captures/</code>. Verdict:{" "}
+                    <strong className={activeResult.risk.score > 50 ? "text-rose-400" : "text-emerald-400"}>
+                      {activeResult.authenticity.classification} ({activeResult.risk.score}/100 Risk)
+                    </strong>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-slate-400">Set Ground Truth:</span>
+                  <button
+                    onClick={() => handleLabelCapture(activeResult.capture_id!, "human")}
+                    disabled={labeledStatus[activeResult.capture_id!] !== undefined}
+                    className={`px-3 py-1.5 rounded-lg font-mono text-xs font-semibold border transition-all cursor-pointer ${
+                      labeledStatus[activeResult.capture_id!] === "genuine"
+                        ? "bg-emerald-500 text-slate-950 border-emerald-400 font-bold"
+                        : "bg-slate-900/80 border-slate-700 text-slate-200 hover:bg-emerald-500/20 hover:border-emerald-500/50"
+                    }`}
+                  >
+                    {labeledStatus[activeResult.capture_id!] === "genuine" ? "✓ Labeled Human" : "👤 Human"}
+                  </button>
+                  <button
+                    onClick={() => handleLabelCapture(activeResult.capture_id!, "ai")}
+                    disabled={labeledStatus[activeResult.capture_id!] !== undefined}
+                    className={`px-3 py-1.5 rounded-lg font-mono text-xs font-semibold border transition-all cursor-pointer ${
+                      labeledStatus[activeResult.capture_id!] === "synthetic"
+                        ? "bg-rose-500 text-white border-rose-400 font-bold"
+                        : "bg-slate-900/80 border-slate-700 text-slate-200 hover:bg-rose-500/20 hover:border-rose-500/50"
+                    }`}
+                  >
+                    {labeledStatus[activeResult.capture_id!] === "synthetic" ? "✓ Labeled AI" : "🤖 AI / Synth"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Risk Meter HUD */}
             <RiskMeter risk={activeResult?.risk ?? null} isAnalyzing={isAnalyzing} />
+
+            {/* Audio Signal Quality & Integrity Meter */}
+            <AudioQualityBadge quality={activeResult?.quality ?? null} isAnalyzing={isAnalyzing} />
 
             {/* Dual Biometric Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,6 +437,18 @@ export function ThreatDashboard() {
                 <span>INCIDENT REPORT</span>
               </button>
             )}
+
+            <button
+              onClick={() => setActiveTab("captures")}
+              className={`px-3 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                activeTab === "captures"
+                  ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>MIC CALIBRATION SAMPLES</span>
+            </button>
           </div>
 
           {/* Tab Content Area */}
@@ -425,6 +510,10 @@ export function ThreatDashboard() {
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === "captures" && (
+              <CapturesManager />
             )}
           </div>
         </div>
